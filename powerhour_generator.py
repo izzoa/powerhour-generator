@@ -6,13 +6,11 @@ import subprocess
 from glob import glob
 from tempfile import TemporaryDirectory
 
-def draw_progress_bar(progress, total, prefix='', length=50, fill='█', print_end="\r"):
-    percent = "{0:.1f}".format(100 * (progress / float(total)))
-    filled_length = int(length * progress // total)
-    bar = fill * filled_length + '-' * (length - filled_length)
-    print(f'\r{prefix} |{bar}| {percent}% Complete', end=print_end)
-    sys.stdout.flush()  # Flush the buffer
-
+def draw_progress_bar(progress, total, prefix=''):
+    percent = 100 * progress // total if total > 0 else 100
+    bar = '[' + '#' * (percent // 2) + '-' * (50 - percent // 2) + ']'
+    sys.stdout.write(f'\r{prefix}Progress: {bar} {percent}% ({progress}/{total})')
+    sys.stdout.flush()
 
 def run_command(command, log_file_path):
     with open(log_file_path, 'w') as log_file:
@@ -30,10 +28,14 @@ def get_video_duration(video_file):
         print(f"Error getting duration for {video_file}")
         return None
 
-def reencode_videos(video_file, start_time, duration, output_path, log_file_path):
+def reencode_videos(video_file, start_time, duration, output_path, log_file_path, fade_duration):
+    fade_in_start = 0  # Start fade in at the beginning of the video
+    fade_out_start = max(duration - fade_duration, 0)  # Start fade out fade_duration seconds before the end
+
     ffmpeg_command = [
-        'ffmpeg', '-y', '-ss', str(start_time), '-i', video_file, '-t', str(duration),
-        '-vf', 'scale=1280:720', '-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '23',
+        'ffmpeg', '-y', '-ss', str(start_time), '-t', str(duration), '-i', video_file,
+        '-vf', f"scale=1280:720, fade=t=in:st={fade_in_start}:d={fade_duration}, fade=t=out:st={fade_out_start}:d={fade_duration}",
+        '-r', '30', '-c:v', 'libx264', '-preset', 'medium', '-crf', '23',
         '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
         '-pix_fmt', 'yuv420p', '-movflags', '+faststart', output_path
     ]
@@ -70,7 +72,7 @@ def main(video_folder, common_clip, fade_duration, output_file):
         print("\nFinished checking durations.")
 
         common_clip_temp = os.path.join(temp_dir, 'common_clip.mp4')
-        if not reencode_videos(common_clip, 0, fade_duration, common_clip_temp, os.path.join(ffmpeg_logs_dir, 'common_clip.log')):
+        if not reencode_videos(common_clip, 0, fade_duration, common_clip_temp, os.path.join(ffmpeg_logs_dir, 'common_clip.log'), fade_duration):
             print(f"Failed to re-encode common clip: {common_clip}")
             return
 
@@ -80,7 +82,7 @@ def main(video_folder, common_clip, fade_duration, output_file):
             temp_clip_name = f'temp_clip_{i:04d}.mp4'
             temp_clip_path = os.path.join(temp_dir, temp_clip_name)
 
-            if reencode_videos(video_file, start_time, 60, temp_clip_path, os.path.join(ffmpeg_logs_dir, f'video_{i:04d}.log')):
+            if reencode_videos(video_file, start_time, 60, temp_clip_path, os.path.join(ffmpeg_logs_dir, f'video_{i:04d}.log'), fade_duration):
                 clip_list.append(temp_clip_path)
             else:
                 print(f"Failed to process video: {video_file}")
