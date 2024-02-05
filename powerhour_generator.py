@@ -6,11 +6,12 @@ import subprocess
 from glob import glob
 from tempfile import TemporaryDirectory
 
-def draw_progress_bar(progress, total, prefix=''):
-    percent = 100 * progress // total if total > 0 else 100
-    bar = '[' + '#' * (percent // 2) + '-' * (50 - percent // 2) + ']'
-    sys.stdout.write(f'\r{prefix}Progress: {bar} {percent}% ({progress}/{total})')
-    sys.stdout.flush()
+def draw_progress_bar(progress, total, prefix='', length=50, fill='█', print_end="\r"):
+    percent = "{0:.1f}".format(100 * (progress / float(total)))
+    filled_length = int(length * progress // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print(f'\r{prefix} |{bar}| {percent}% Complete', end=print_end)
+    sys.stdout.flush()  # Flush the buffer
 
 def run_command(command, log_file_path):
     with open(log_file_path, 'w') as log_file:
