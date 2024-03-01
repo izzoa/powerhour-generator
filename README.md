@@ -1,30 +1,32 @@
 # Powerhour Generator
 
-Now you can make your own custom powerhour mixes, just give it a folder of random music videos and it will randomly extract one-minute clips from each, and stitch them together (along with fade-in and fade-out effects), with an interstitial video of your choosing.
+Create your own custom powerhour mixes effortlessly. Provide a folder full of your favorite music videos, and this tool will randomly extract one-minute clips from each, seamlessly stitching them together with fade-in and fade-out effects. An interstitial video of your choosing can be inserted between each clip for a personalized touch.
 
-It ensures that all videos are re-encoded to the same format, resolution, framerate, and codecs before being concatenated, so you can throw pretty much anything at it (well, anything FFmpeg can process) and it will standardize it into a nice little x264-encoded output video, for your partying pleasure.
+The script ensures that all videos are re-encoded to the same format, resolution, framerate, and codecs before concatenation. This means you can input virtually any video format that FFmpeg supports, and it will output a standardized x264-encoded video, perfect for any gathering.
 
-Cheers!
+Let the party begin!
 
 ## Features
 
-- Processes a directory of video files
-- Inserts a common clip between each video
-- Re-encodes videos to a uniform format and resolution
-- Randomizes video selection
-- Supports a specified number of videos (60 by default, as that would be an hour...)
-- Provides a progress bar during processing
+- Processes a directory of video files.
+- Inserts a common clip between each video.
+- Re-encodes videos to a uniform format, resolution, and framerate.
+- Normalizes audio levels across all clips.
+- Ensures clips are taken at least 10 seconds away from the start and end of their source videos to avoid spoilers or abrupt beginnings/ends.
+- Randomizes video selection.
+- Supports specifying the number of videos (default is 60 for an hour-long powerhour).
+- Includes a progress bar during processing for better user experience.
 
 ## Requirements
 
 - Python 3.x
 - FFmpeg
 
-Make sure you have FFmpeg installed on your system and that it's available in your system's PATH.
+Ensure FFmpeg is installed on your system and accessible in your system's PATH.
 
 ## Usage
 
-Run the script from the command line providing the path to the video folder, the path to the common clip, the fade duration in seconds, and the desired output file name as arguments.
+Execute the script from the command line, supplying the path to the video folder, the path to the common clip, the fade duration in seconds, and the desired output file name as arguments.
 
 ```bash
 python powerhour_generator.py /path/to/video/folder /path/to/common_clip.mp4 fade_duration_in_seconds output_file_name.mp4
@@ -32,18 +34,19 @@ python powerhour_generator.py /path/to/video/folder /path/to/common_clip.mp4 fad
 
 ## Arguments
 
-- `/path/to/video/folder`: The directory containing the video files to be processed.
-- `/path/to/common_clip.mp4`: The path to the video file that will be inserted between each content video.
-- `fade_duration_in_seconds`: The duration of the fade effect applied to the common clip (in seconds).
-- `output_file_name.mp4`: The filename for the output concatenated video.
+- `/path/to/video/folder`: Directory containing the video files to be processed.
+- `/path/to/common_clip.mp4`: Path to the video file that will be inserted between each content video.
+- `fade_duration_in_seconds`: Duration of the fade effect applied to the common clip and at the beginning and end of each video clip (in seconds).
+- `output_file_name.mp4`: Filename for the output concatenated video.
 
 ## How It Works
 
-1. The script first checks the duration of each video file in the provided directory to ensure it meets the minimum duration requirement.
-2. It then re-encodes the common clip and each video file to the same resolution, framerate, and codecs.
-3. The script randomly selects videos (up to the maximum limit) and processes them, inserting the common clip between each one.
-4. Finally, all processed clips are concatenated into a single output file.
+1. The script checks the duration of each video file in the provided directory to ensure it meets the minimum duration requirement, considering additional buffers to avoid selecting clips too close to the start or end of the videos.
+2. It analyzes and normalizes the audio loudness across all videos to ensure a consistent audio experience.
+3. The common clip and each video file are re-encoded to the same resolution, framerate, and codecs.
+4. The script then randomly selects videos (up to the specified maximum limit), processes them by inserting the common clip between each, and ensures audio levels are normalized.
+5. Finally, all processed clips are concatenated into a single output file, ready to be played.
 
 ## Troubleshooting
 
-If you encounter issues with the progress bar or any other aspect of the script, ensure you are running the script in a standard terminal or command prompt. Some IDEs or text editors might not support in-place line updates required for the progress bar to function correctly.
+If you run into issues with the progress bar or any other feature, verify that you're running the script in a standard terminal or command prompt environment. Some IDEs or text editors may not support the in-place line updates required for the progress bar functionality.
