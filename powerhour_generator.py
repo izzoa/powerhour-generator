@@ -15,10 +15,11 @@ def draw_progress_bar(progress, total, prefix='', length=50, fill='█', print_e
     print(f'\r{prefix} |{bar}| {percent}% Complete', end=print_end)
     sys.stdout.flush()
 
-def run_command(command, log_file_path):
+def run_command(command, log_file_path, show_progress=False):
     try: 
+        stdout_dest = subprocess.DEVNULL if not show_progress else None
         with open(log_file_path, 'w') as log_file:
-            result = subprocess.run(command, stderr=log_file, stdout=subprocess.DEVNULL)
+            result = subprocess.run(command, stdout=stdout_dest, stderr=log_file)
         return result.returncode == 0
     except Exception as e:
         with open(log_file_path, 'a') as log_file:
@@ -31,10 +32,13 @@ def get_video_duration(video_file):
                                             'format=duration', '-of',
                                             'default=noprint_wrappers=1:nokey=1', video_file],
                                            text=True).strip()
+        if duration == 'N/A':
+            return None  # Return None if duration is not available
         return float(duration)
     except subprocess.CalledProcessError:
         print(f"Error getting duration for {video_file}")
         return None
+
 
 def analyze_loudness(video_file, log_file_path, json_output_dir):
     ffmpeg_command = [
@@ -122,7 +126,9 @@ def main(video_folder, common_clip, fade_duration, output_file):
         print("Specified video folder or common clip file does not exist.")
         return
 
-    video_files = glob(os.path.join(video_folder, '*'))
+    excluded_extensions = ['.log', '.py']
+    video_files = [f for f in glob(os.path.join(video_folder, '*')) if os.path.splitext(f)[1].lower() not in excluded_extensions]
+
     if not video_files:
         print("No video files found in the specified directory.")
         return
@@ -185,14 +191,13 @@ def main(video_folder, common_clip, fade_duration, output_file):
         if not run_command(concat_command, os.path.join(ffmpeg_logs_dir, 'concat.log')):
             print(f"Failed to concatenate videos. See {os.path.join(ffmpeg_logs_dir, 'concat.log')}")
 
-
 if __name__ == '__main__':
     if len(sys.argv) != 5:
-        print("Usage: python powerhour_generator.py /path/to/video/folder /path/to/common_clip.mp4 fade_duration_in_seconds output_file_name.mp4")
+        print("Usage: python powerhour_generator.py [/path/to/video/folder OR playlist_url] /path/to/common_clip.mp4 fade_duration_in_seconds output_file_name.mp4")
         sys.exit(1)
 
     try:
-        video_folder_path = sys.argv[1]
+        video_folder_or_playlist = sys.argv[1]
         common_clip_path = sys.argv[2]
         fade_duration_seconds = float(sys.argv[3])
         output_file_name = sys.argv[4]
@@ -200,4 +205,18 @@ if __name__ == '__main__':
         print("Error: fade_duration_in_seconds argument must be a number.")
         sys.exit(1)
     
-    main(video_folder_path, common_clip_path, fade_duration_seconds, output_file_name)
+    # Use temporary directory
+    with TemporaryDirectory() as temp_dir:
+        if video_folder_or_playlist.startswith('http'):
+            print("Downloading playlist using yt-dlp...")
+            command = ["yt-dlp", "-o", f"{temp_dir}/%(title)s.%(ext)s", "--yes-playlist",
+                       video_folder_or_playlist]
+            log_file_path = os.path.join(temp_dir, 'yt-dlp.log')
+            if not run_command(command, log_file_path, show_progress=True):
+                print(f"Failed to download playlist. See {log_file_path}")
+                sys.exit(1)
+            video_folder_path = temp_dir
+        else:
+            video_folder_path = video_folder_or_playlist
+
+        main(video_folder_path, common_clip_path, fade_duration_seconds, output_file_name)
