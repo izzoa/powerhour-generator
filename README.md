@@ -1,6 +1,6 @@
 # Powerhour Generator
 
-Create your own custom powerhour mixes effortlessly. You can either provide a folder of music videos, or a YouTube playlist link. If the latter, this tool will download the playlist using yt-dlp (if a playlist URL is given) and randomly extract one-minute clips from each video, seamlessly stitching them together with fade-in and fade-out effects. An interstitial video of your choosing can be inserted between each clip for a personalized touch.
+Create your own custom powerhour mixes effortlessly. You can either provide a folder of music videos or a YouTube playlist link. If the latter, this tool will download the playlist using yt-dlp (if a playlist URL is given) and randomly extract one-minute clips from each video, seamlessly stitching them together with fade-in and fade-out effects. An interstitial video of your choosing can be inserted between each clip for a personalized touch.
 
 The script ensures that all videos are re-encoded to the same format, resolution, framerate, and codecs before concatenation. This means you can input virtually any video format that FFmpeg supports, and it will output a standardized x264-encoded video, perfect for any gathering.
 
@@ -17,13 +17,31 @@ Let the party begin!
 - Supports specifying the number of videos (default is 60 for an hour-long powerhour).
 - Includes a progress bar during processing for better user experience.
 
-## Requirements
+## Setup
 
-- Python 3.x
-- FFmpeg
-- [yt-dlp (Optional)](https://github.com/yt-dlp/yt-dlp)
+Before using the Powerhour Generator, you need to ensure that Python 3.x, FFmpeg, and yt-dlp are installed on your system. To simplify this process, we've provided an `install_requirements.sh` script for macOS users.
 
-Ensure FFmpeg and yt-dlp are installed on your system and accessible in your system's PATH.
+### Running the `install_requirements.sh` Script
+
+1. Open Terminal on your Mac.
+2. Navigate to the directory containing the `install_requirements.sh` script.
+3. Make the script executable by running the command:
+   ```bash
+   chmod +x install_requirements.sh
+   ```
+4. Execute the script to automatically install the necessary components:
+   ```bash
+   ./install_requirements.sh
+   ```
+
+The script checks for and installs Homebrew (if not already installed), Python 3, FFmpeg, and yt-dlp.
+
+### Manual Installation
+
+If you prefer to manually install the prerequisites or are using a different operating system, please ensure the following are installed:
+- **Python 3.x**: Ensure Python 3.x is installed and accessible in your system's PATH.
+- **FFmpeg**: Required for processing videos.
+- **[yt-dlp (Optional)](https://github.com/yt-dlp/yt-dlp)**: Needed if you wish to download YouTube playlists. Ensure it's in your system's PATH.
 
 ## Usage
 
