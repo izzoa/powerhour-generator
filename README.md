@@ -103,6 +103,11 @@ Execute the script from the command line, supplying the path to the video folder
 python powerhour_generator.py [/path/to/video/folder OR playlist_url] /path/to/common_clip.mp4 fade_duration_in_seconds output_file_name.mp4   
 ```
 
+Example command:
+```bash  
+python powerhour_generator.py /Users/foobar/Development/powerhour/input_videos /Users/foobar/Development/powerhour/common_clip.webm 1 powerhour_output.mp4
+```
+
 ## Arguments   
 
 - `/path/to/video/folder OR playlist_url`: Directory containing the video files to be processed or a YouTube playlist URL.  
