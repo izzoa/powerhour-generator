@@ -34,17 +34,35 @@ This will install Python 3 if missing, install ffmpeg, and install yt-dlp via pi
 
 For other Linux distributions, you may need to install the dependencies manually using your distribution's package manager.   
 
-### Windows   
+### Windows Installation
 
-On Windows, use the provided `Install-Requirements.ps1` PowerShell script to install dependencies via Chocolatey:   
-
-```   
-.\Install-Requirements.ps1
-```  
-
-This requires PowerShell and administrative rights. It will install Chocolatey if missing, and then install Python 3, ffmpeg, and yt-dlp.   
-
-If you encounter any issues with permissions or package availability, you may need to install components manually.   
+1. Open PowerShell as Administrator 
+   - Press the Windows key and search for "PowerShell"
+   - Right-click on PowerShell and select "Run as Administrator"
+2. Download the `Install-Requirements.ps1` script
+   - You can download it directly in PowerShell using:
+     ```
+     Invoke-WebRequest -Uri https://raw.githubusercontent.com/amizzo87/powerhour-generator/main/Install_Requirements_Win.ps1 -OutFile Install-Requirements.ps1
+     ```
+   - Or browse to this GitHub repo and manually download the file to a chosen directory
+3. Give Execution Permissions to the Script
+   - Run the command: 
+     ```
+     Unblock-File .\Install-Requirements.ps1
+     ```
+4. Execute the Script
+   - Run the command:
+     ```
+     .\Install-Requirements.ps1
+     ```
+   - This will install Chocolatey if missing and then install Python 3, ffmpeg, and yt-dlp
+5. Verify Installations
+   - Run the following commands and check that version strings are printed:
+     ```
+     python --version
+     ffmpeg -version
+     yt-dlp --version
+     ```
 
 ### MacOS   
 
