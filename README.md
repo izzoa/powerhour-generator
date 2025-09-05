@@ -1,131 +1,311 @@
-# Powerhour Generator 
+# PowerHour Generator 🎉
 
-Create your own custom powerhour mixes effortlessly. You can either provide a folder of music videos or a YouTube playlist link. If the latter, this tool will download the playlist using yt-dlp (if a playlist URL is given) and randomly extract one-minute clips from each video, seamlessly stitching them together with fade-in and fade-out effects. An interstitial video of your choosing can be inserted between each clip for a personalized touch.  
+> Create epic PowerHour videos with ease - now with a graphical interface!
 
-The script ensures that all videos are re-encoded to the same format, resolution, framerate, and codecs before concatenation. This means you can input virtually any video format that FFmpeg supports, and it will output a standardized x264-encoded video, perfect for any gathering.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-Required-green.svg)](https://ffmpeg.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GUI](https://img.shields.io/badge/GUI-Available-success.svg)](README_GUI.md)
+[![CLI](https://img.shields.io/badge/CLI-Available-success.svg)](#command-line-usage)
 
-Let the party begin!  
+Create your own custom PowerHour mixes effortlessly! This tool can process local video folders or download YouTube playlists, randomly extract one-minute clips from each video, and seamlessly stitch them together with smooth transitions. Perfect for parties, celebrations, or any gathering that needs an hour of non-stop entertainment!
 
-## Features   
+## 🚀 Quick Start
 
-- Processes a directory of video files or downloads a YouTube playlist. 
-- Inserts a common clip between each video.  
-- Re-encodes videos to a uniform format, resolution, and framerate.   
-- Normalizes audio levels across all clips.  
-- Ensures clips are taken at least 10 seconds away from the start and end of their source videos to avoid spoilers or abrupt beginnings/ends.
-- Randomizes video selection.   
-- Supports specifying the number of videos (default is 60 for an hour-long powerhour).  
-- Includes a progress bar during processing for better user experience.  
+### GUI Version (Recommended)
+The easiest way to use PowerHour Generator is through the graphical interface:
 
-## Installation  
-
-This script requires Python 3, ffmpeg, and yt-dlp.  
-
-### Linux   
-
-For Debian/Ubuntu Linux, you can install the dependencies using the provided `install_requirements.sh` script:   
-
-```  
-chmod +x install_requirements.sh
-sudo ./install_requirements.sh  
+```bash
+python powerhour_gui.py
 ```
 
-This will install Python 3 if missing, install ffmpeg, and install yt-dlp via pip.   
+![PowerHour GUI](docs/images/gui_screenshot.png)
 
-For other Linux distributions, you may need to install the dependencies manually using your distribution's package manager.   
+**[📖 Full GUI Documentation →](docs/README_GUI.md)**
 
-### Windows Installation
+### CLI Version
+For automation and scripting, use the command-line interface:
 
-1. Open PowerShell as Administrator 
-   - Press the Windows key and search for "PowerShell"
-   - Right-click on PowerShell and select "Run as Administrator"
-2. Download the `Install-Requirements.ps1` script
-   - You can download it directly in PowerShell using:
-     ```
-     Invoke-WebRequest -Uri https://raw.githubusercontent.com/amizzo87/powerhour-generator/main/Install_Requirements_Win.ps1 -OutFile Install-Requirements.ps1
-     ```
-   - Or browse to this GitHub repo and manually download the file to a chosen directory
-3. Give Execution Permissions to the Script
-   - Run the command: 
-     ```
-     Unblock-File .\Install-Requirements.ps1
-     ```
-4. Execute the Script
-   - Run the command:
-     ```
-     .\Install-Requirements.ps1
-     ```
-   - This will install Chocolatey if missing and then install Python 3, ffmpeg, and yt-dlp
-5. Verify Installations
-   - Run the following commands and check that version strings are printed:
-     ```
-     python --version
-     ffmpeg -version
-     yt-dlp --version
-     ```
-
-### MacOS   
-
-For Mac systems, use the provided `install_requirements.sh` script to install dependencies via Homebrew:  
-
-```  
-chmod +x install_requirements.sh  
-./install_requirements.sh
+```bash
+python powerhour_generator.py /path/to/videos /path/to/transition.mp4 3 output.mp4
 ```
 
-This will:  
+## 📚 Documentation
 
-- Install Homebrew if missing  
-- Update and upgrade Homebrew packages    
-- Install or upgrade Python 3  
-- Install or upgrade ffmpeg  
-- Install or upgrade yt-dlp  
+| Document | Description |
+|----------|-------------|
+| **[GUI Quick Start](docs/README_GUI.md)** | Installation and setup for the graphical interface |
+| **[User Guide](docs/USER_GUIDE.md)** | Comprehensive guide with tutorials and screenshots |
+| **[Architecture](docs/ARCHITECTURE.md)** | System design and technical documentation |
+| **[Contributing](docs/CONTRIBUTING.md)** | How to contribute to the project |
+| **[Changelog](docs/CHANGELOG.md)** | Version history and updates |
 
-### Verifying Installation   
+## ✨ Features
 
-After running the setup script, you can verify the installations with:   
+### Core Capabilities
+- 🎬 **Dual Interface** - Choose between GUI or command-line
+- 📁 **Local Processing** - Process folders of video files
+- 🌐 **Online Support** - Download and process YouTube playlists
+- 🎵 **Audio Normalization** - Consistent volume across all clips
+- 🔄 **Smooth Transitions** - Customizable fade effects between videos
+- 📊 **Real-time Progress** - Visual progress tracking (GUI)
+- 🎯 **Smart Selection** - Random 60-second clips from longer videos
+- 🎨 **Professional Output** - Standardized HD video format
+
+### GUI-Exclusive Features
+- 📈 Real-time progress bars with ETA
+- 💾 Configuration persistence
+- 🎛️ Preset system for quick settings
+- 📝 Comprehensive logging
+- 🔧 Expert mode for advanced users
+- 📚 Built-in help system
+
+## 📋 Requirements
+
+### System Requirements
+- **OS**: Windows 10+, macOS 10.14+, or Linux (Ubuntu 18.04+)
+- **Python**: 3.8 or higher
+- **RAM**: 4GB minimum, 8GB recommended
+- **Storage**: 10GB free space
+
+### Software Dependencies
+- **FFmpeg** - Video processing engine
+- **Python 3.8+** - Runtime environment
+- **Tkinter** - GUI framework (included with Python)
+- **yt-dlp** - YouTube download support (optional)
+- **psutil** - Resource monitoring (optional)
+
+## 🔧 Installation
+
+### Quick Install Scripts
+
+We provide automated installation scripts for all platforms:
+
+#### Windows
+```powershell
+# Run PowerShell as Administrator
+.\Install_Requirements_Win.ps1
+```
+
+#### macOS
+```bash
+chmod +x install_requirements_mac.sh
+./install_requirements_mac.sh
+```
+
+#### Linux (Debian/Ubuntu)
+```bash
+chmod +x install_requirements_deb.sh
+sudo ./install_requirements_deb.sh
+```
+
+### Manual Installation
+
+<details>
+<summary>Click for detailed manual installation steps</summary>
+
+#### 1. Install Python 3.8+
+- **Windows**: Download from [python.org](https://www.python.org/downloads/)
+- **macOS**: `brew install python3`
+- **Linux**: `sudo apt install python3 python3-pip`
+
+#### 2. Install FFmpeg
+- **Windows**: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+- **macOS**: `brew install ffmpeg`
+- **Linux**: `sudo apt install ffmpeg`
+
+#### 3. Install Python Dependencies
+```bash
+pip install psutil  # Optional: for resource monitoring
+pip install yt-dlp  # Optional: for YouTube support
+```
+
+#### 4. Verify Installation
+```bash
+python3 --version   # Should show 3.8+
+ffmpeg -version     # Should show FFmpeg version
+yt-dlp --version    # Should show yt-dlp version (if installed)
+```
+
+</details>
+
+## 🎮 Usage
+
+### GUI Usage (Recommended for Most Users)
+
+1. **Launch the application**:
+   ```bash
+   python powerhour_gui.py
+   ```
+
+2. **Select your video source**:
+   - Browse to a folder with videos, OR
+   - Paste a YouTube playlist URL
+
+3. **Choose a transition clip**:
+   - Select a 3-5 second video for transitions
+
+4. **Configure settings**:
+   - Fade duration (0-10 seconds)
+   - Output location and filename
+
+5. **Start processing**:
+   - Click "Start Processing"
+   - Monitor real-time progress
+   - Enjoy your PowerHour video!
+
+**[📖 Detailed GUI Tutorial →](docs/USER_GUIDE.md#step-by-step-tutorial)**
+
+### Command-Line Usage
+
+```bash
+python powerhour_generator.py [source] [transition] [fade] [output]
+```
+
+**Parameters:**
+- `source`: Path to video folder or YouTube playlist URL
+- `transition`: Path to transition clip (plays between videos)
+- `fade`: Fade duration in seconds
+- `output`: Output filename
+
+**Example:**
+```bash
+# Local videos
+python powerhour_generator.py ./videos ./transition.mp4 3 powerhour.mp4
+
+# YouTube playlist
+python powerhour_generator.py "https://youtube.com/playlist?list=..." ./transition.mp4 3 powerhour.mp4
+```
+
+## 🎯 How It Works
+
+1. **Input Processing**
+   - Scans folder for videos or downloads YouTube playlist
+   - Validates videos are at least 80 seconds long
+
+2. **Audio Analysis**
+   - Analyzes loudness levels of all clips
+   - Prepares normalization parameters
+
+3. **Video Processing**
+   - Randomly selects 60-second segments
+   - Applies audio normalization
+   - Adds fade in/out effects
+   - Scales to HD resolution (1280x720)
+
+4. **Assembly**
+   - Inserts transition clips between videos
+   - Concatenates all clips into final video
+   - Outputs standardized MP4 file
+
+## 🔍 Project Structure
 
 ```
-python3 --version   
-ffmpeg -version   
-yt-dlp --version  
+powerhour-generator/
+├── powerhour/               # Source code package
+│   ├── __init__.py         # Package initialization
+│   ├── powerhour_gui.py    # GUI application
+│   ├── powerhour_processor.py  # Video processing engine
+│   └── powerhour_generator.py  # CLI application
+│
+├── tests/                   # Test suite
+│   └── test_gui.py         # GUI tests
+│
+├── docs/                    # Documentation
+│   ├── README_GUI.md       # GUI quick start
+│   ├── USER_GUIDE.md       # Comprehensive user guide
+│   ├── CHANGELOG.md        # Version history
+│   ├── CONTRIBUTING.md     # Development guide
+│   ├── ARCHITECTURE.md     # Technical documentation
+│   ├── RELEASE.md          # Release guide
+│   └── UI_MIGRATION.md     # Migration tracker
+│
+├── scripts/                 # Utility scripts
+│   ├── install_requirements_mac.sh   # macOS installer
+│   ├── Install_Requirements_Win.ps1  # Windows installer
+│   ├── install_requirements_deb.sh   # Linux installer
+│   └── build.py            # Build automation
+│
+├── assets/                  # Static assets
+│   └── logo.png            # Application logo
+│
+├── .github/                 # GitHub configuration
+│   └── workflows/          # CI/CD workflows
+│       ├── ci.yml          # Continuous integration
+│       └── release.yml     # Release automation
+│
+├── README.md               # Project overview (this file)
+├── setup.py                # Package configuration
+├── requirements.txt        # Python dependencies
+├── LICENSE                 # MIT license
+└── Makefile               # Build commands
 ```
 
-This will print out version strings if installed correctly.   
+## 🤝 Contributing
 
-If you encounter any issues, you may need to install components manually via your system's package manager.  
+We welcome contributions! Please see our **[Contributing Guide](docs/CONTRIBUTING.md)** for:
+- Development setup
+- Code style guidelines
+- Testing procedures
+- Pull request process
 
-## Usage  
+## 📈 Development Status
 
-Execute the script from the command line, supplying the path to the video folder or a YouTube playlist URL, the path to the common clip, the fade duration in seconds, and the desired output file name as arguments.  
+### Current Version: 1.0.0
+- ✅ Full GUI implementation
+- ✅ Threading for non-blocking UI
+- ✅ Real-time progress tracking
+- ✅ Configuration persistence
+- ✅ Comprehensive error handling
+- ✅ Expert mode for power users
 
-```bash  
-python powerhour_generator.py [/path/to/video/folder OR playlist_url] /path/to/common_clip.mp4 fade_duration_in_seconds output_file_name.mp4   
-```
+### Roadmap
+See **[CHANGELOG.md](docs/CHANGELOG.md#roadmap)** for planned features:
+- Batch processing queue
+- Video preview thumbnails
+- Custom transitions per segment
+- Pause/resume capability
+- Cloud upload integration
 
-Example command:
-```bash  
-python powerhour_generator.py /Users/foobar/Development/powerhour/input_videos /Users/foobar/Development/powerhour/common_clip.webm 1 powerhour_output.mp4
-```
+## 🛠️ Troubleshooting
 
-## Arguments   
+### Common Issues
 
-- `/path/to/video/folder OR playlist_url`: Directory containing the video files to be processed or a YouTube playlist URL.  
-- `/path/to/common_clip.mp4`: Path to the video file that will be inserted between each content video.   
-- `fade_duration_in_seconds`: Duration of the fade effect applied to the common clip and at the beginning and end of each video clip (in seconds).  
-- `output_file_name.mp4`: Filename for the output concatenated video.   
+| Problem | Solution |
+|---------|----------|
+| "FFmpeg not found" | Ensure FFmpeg is installed and in PATH |
+| "No valid videos" | Videos must be at least 80 seconds long |
+| Processing is slow | Use "Low Quality" preset or close other apps |
+| GUI won't start | Verify Python 3.8+ and Tkinter are installed |
 
-## How It Works  
+**[📖 Full Troubleshooting Guide →](docs/USER_GUIDE.md#troubleshooting-guide)**
 
-1. If a YouTube playlist URL is provided, the script downloads the playlist using yt-dlp.   
-2. The script checks the duration of each video file in the provided directory or downloaded playlist to ensure it meets the minimum duration requirement, considering additional buffers to avoid selecting clips too close to the start or end of the videos.  
-3. It analyzes and normalizes the audio loudness across all videos to ensure a consistent audio experience.   
-4. The common clip and each video file are re-encoded to the same resolution, framerate, and codecs.  
-5. The script then randomly selects videos (up to the specified maximum limit), processes them by inserting the common clip between each, and ensures audio levels are normalized.   
-6. Finally, all processed clips are concatenated into a single output file, ready to be played.   
+## 📝 License
 
-## Troubleshooting   
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-If you run into issues with the progress bar or any other feature, verify that you're running the script in a standard terminal or command prompt environment. Some IDEs or text editors may not support the in-place line updates required for the progress bar functionality. If you're having trouble downloading a YouTube playlist, ensure that yt-dlp is installed and updated to the latest version.
+## 🙏 Acknowledgments
 
-Let me know if you have any other questions!
+- **FFmpeg** - The powerful multimedia framework that makes this possible
+- **yt-dlp** - For YouTube playlist support
+- **Python Community** - For excellent libraries and support
+- **Contributors** - Everyone who has helped improve this project
+
+## 📮 Support
+
+- **📖 Documentation**: Start with the [User Guide](docs/USER_GUIDE.md)
+- **🐛 Issues**: Report bugs on [GitHub Issues](https://github.com/izzoa/powerhour-generator/issues)
+- **💬 Discussions**: Ask questions in [GitHub Discussions](https://github.com/izzoa/powerhour-generator/discussions)
+- **📧 Contact**: [anthony@izzo.one](mailto:anthony@izzo.one)
+
+---
+
+<div align="center">
+
+**[Get Started with GUI](docs/README_GUI.md)** • **[User Guide](docs/USER_GUIDE.md)** • **[Contributing](docs/CONTRIBUTING.md)** • **[Architecture](docs/ARCHITECTURE.md)**
+
+Made with ❤️ by Anthony Izzo
+
+*Let the party begin!* 🎉
+
+</div>

@@ -1,0 +1,36 @@
+# Development Requirements for PowerHour Generator
+# Install with: pip install -r requirements-dev.txt
+
+# Include base requirements
+-r requirements.txt
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Code Quality
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+pylint>=2.15.0
+isort>=5.11.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.0.0
+sphinx-autodoc-typehints>=1.19.0
+
+# Build Tools
+pyinstaller>=5.0
+wheel>=0.37.0
+twine>=4.0.0
+setuptools>=65.0.0
+
+# Development Utilities
+ipython>=8.0.0
+notebook>=6.5.0
+pre-commit>=3.0.0
+
+# YouTube Support (for testing)
+yt-dlp>=2023.1.1

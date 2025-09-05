@@ -1,0 +1,49 @@
+# MANIFEST.in for PowerHour Generator
+# This file specifies additional files to include in the source distribution
+
+# Include documentation
+include README.md
+include LICENSE
+recursive-include docs *.md
+
+# Include configuration files
+include requirements*.txt
+include environment.yml
+include setup.py
+include setup.cfg
+include pyproject.toml
+
+# Include build files
+include powerhour.spec
+include Makefile
+recursive-include scripts *.py *.sh *.ps1
+
+# Include assets
+recursive-include assets *.png *.ico *.icns
+
+# Include test files
+recursive-include tests *.py
+recursive-include tests/fixtures *
+
+# Include source code
+recursive-include powerhour *.py
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.swp
+global-exclude *~
+global-exclude .git*
+global-exclude *.log
+
+# Exclude build artifacts
+prune build
+prune dist
+prune releases
+prune *.egg-info
+prune .pytest_cache
+prune .mypy_cache
+prune htmlcov
+prune .coverage

@@ -26,11 +26,15 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Release artifacts
+releases/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
+# Note: powerhour.spec is tracked for PyInstaller configuration
+# *.spec
 
 # Installer logs
 pip-log.txt
@@ -158,3 +162,22 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+.clinerules/byterover-rules.md
+.kilocode/rules/byterover-rules.md
+.roo/rules/byterover-rules.md
+.windsurf/rules/byterover-rules.md
+.cursor/rules/byterover-rules.mdc
+.kiro/steering/byterover-rules.md
+.qoder/rules/byterover-rules.md
+.augment/rules/byterover-rules.md
+
+# Project-specific ignores
+test_output/
+test_videos/
+config.json
+*.mp4
+*.avi
+*.mkv
+*.mov
+!test_videos/test_video.mp4
+!test_videos/common_clip.mp4

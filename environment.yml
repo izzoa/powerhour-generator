@@ -1,0 +1,47 @@
+# PowerHour Generator Conda Environment
+# Create environment: conda env create -f environment.yml
+# Activate: conda activate powerhour
+
+name: powerhour
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Python version
+  - python=3.10
+  
+  # Core dependencies
+  - pip
+  - pillow>=9.0
+  
+  # FFmpeg (advantage of conda: includes ffmpeg!)
+  - ffmpeg>=5.0
+  
+  # Development tools (optional)
+  - ipython
+  - jupyter
+  
+  # Install pip packages
+  - pip:
+    # Clipboard support
+    - pyperclip>=1.8.0
+    
+    # YouTube support (optional)
+    # - yt-dlp>=2023.1.1
+    
+    # Development dependencies (optional)
+    # - pytest>=7.0.0
+    # - pytest-cov>=4.0.0
+    # - black>=22.0.0
+    # - flake8>=5.0.0
+    # - mypy>=1.0.0
+    
+    # Build tools (optional)
+    # - pyinstaller>=5.0
+    # - wheel>=0.37.0
+    # - twine>=4.0.0
+
+# Environment variables
+variables:
+  PYTHONPATH: .

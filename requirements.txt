@@ -1,0 +1,14 @@
+# PowerHour Generator Requirements
+# Core dependencies for running the application
+
+# Image handling for GUI (optional but recommended)
+Pillow>=9.0.0
+
+# Clipboard support for better user experience
+pyperclip>=1.8.0
+
+# Note: tkinter comes with Python standard library
+# Note: FFmpeg and FFprobe must be installed separately (not Python packages)
+
+# Optional: YouTube/playlist support (uncomment if needed)
+# yt-dlp>=2023.1.1

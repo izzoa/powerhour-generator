@@ -1,0 +1,384 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0)'
+        required: true
+        default: '1.0'
+
+env:
+  PYTHON_VERSION: '3.10'
+  APP_NAME: 'PowerHourGenerator'
+
+jobs:
+  # Build Windows MSI installer
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pyinstaller
+          
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller powerhour.spec --clean --noconfirm
+          
+      - name: Install WiX Toolset (for MSI creation)
+        run: |
+          choco install wixtoolset -y
+          
+      - name: Create MSI installer
+        run: |
+          # Create WiX source file
+          @'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+            <Product Id="*" 
+                     Name="PowerHour Generator"
+                     Language="1033"
+                     Version="${{ github.event.inputs.version || '1.0' }}.0"
+                     Manufacturer="Anthony Izzo"
+                     UpgradeCode="12345678-1234-1234-1234-123456789012">
+              
+              <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+              <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+              <MediaTemplate EmbedCab="yes" />
+              
+              <Feature Id="ProductFeature" Title="PowerHour Generator" Level="1">
+                <ComponentGroupRef Id="ProductComponents" />
+                <ComponentGroupRef Id="StartMenuShortcuts" />
+              </Feature>
+              
+              <Directory Id="TARGETDIR" Name="SourceDir">
+                <Directory Id="ProgramFilesFolder">
+                  <Directory Id="INSTALLFOLDER" Name="PowerHour Generator" />
+                </Directory>
+                <Directory Id="ProgramMenuFolder">
+                  <Directory Id="ApplicationProgramsFolder" Name="PowerHour Generator" />
+                </Directory>
+              </Directory>
+              
+              <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+                <Component Id="MainExecutable" Guid="87654321-4321-4321-4321-876543210987">
+                  <File Id="PowerHourGeneratorEXE" Source="dist\PowerHourGenerator\PowerHourGenerator.exe" KeyPath="yes">
+                    <Shortcut Id="ApplicationStartMenuShortcut" 
+                              Directory="ApplicationProgramsFolder" 
+                              Name="PowerHour Generator" 
+                              WorkingDirectory="INSTALLFOLDER"
+                              Icon="PowerHourIcon.ico" 
+                              Advertise="yes" />
+                  </File>
+                </Component>
+              </ComponentGroup>
+              
+              <ComponentGroup Id="StartMenuShortcuts" Directory="ApplicationProgramsFolder">
+                <Component Id="StartMenuShortcut" Guid="11111111-2222-3333-4444-555555555555">
+                  <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+                  <RegistryValue Root="HKCU" Key="Software\PowerHourGenerator" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+                </Component>
+              </ComponentGroup>
+              
+              <Icon Id="PowerHourIcon.ico" SourceFile="dist\PowerHourGenerator\PowerHourGenerator.exe" />
+            </Product>
+          </Wix>
+          '@ | Out-File -FilePath installer.wxs -Encoding UTF8
+          
+          # Compile WiX source
+          & "${env:WIX}bin\candle.exe" installer.wxs
+          & "${env:WIX}bin\light.exe" -ext WixUIExtension installer.wixobj -o "PowerHourGenerator-${{ github.event.inputs.version || '1.0' }}-windows.msi"
+          
+      - name: Upload Windows MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi
+          path: PowerHourGenerator-*.msi
+
+  # Build Linux DEB package
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg build-essential debhelper devscripts
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pyinstaller
+          
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller powerhour.spec --clean --noconfirm
+          
+      - name: Create DEB package structure
+        run: |
+          VERSION="${{ github.event.inputs.version || '1.0' }}"
+          DEB_DIR="powerhour-generator_${VERSION}_amd64"
+          
+          # Create directory structure
+          mkdir -p ${DEB_DIR}/DEBIAN
+          mkdir -p ${DEB_DIR}/usr/bin
+          mkdir -p ${DEB_DIR}/usr/share/applications
+          mkdir -p ${DEB_DIR}/usr/share/doc/powerhour-generator
+          mkdir -p ${DEB_DIR}/usr/share/icons/hicolor/256x256/apps
+          mkdir -p ${DEB_DIR}/opt/powerhour-generator
+          
+          # Copy executable and dependencies
+          cp -r dist/PowerHourGenerator/* ${DEB_DIR}/opt/powerhour-generator/
+          
+          # Create wrapper script
+          cat > ${DEB_DIR}/usr/bin/powerhour-generator << 'EOF'
+          #!/bin/bash
+          /opt/powerhour-generator/PowerHourGenerator "$@"
+          EOF
+          chmod +x ${DEB_DIR}/usr/bin/powerhour-generator
+          
+          # Create control file
+          cat > ${DEB_DIR}/DEBIAN/control << EOF
+          Package: powerhour-generator
+          Version: ${VERSION}
+          Section: multimedia
+          Priority: optional
+          Architecture: amd64
+          Depends: ffmpeg
+          Maintainer: Anthony Izzo <anthony@izzo.one>
+          Description: Create 60-minute PowerHour video compilations
+           PowerHour Generator is a powerful video compilation tool that creates
+           60-minute PowerHour videos from your video collection. Features include
+           automatic audio normalization, fade transitions, and common clip insertion.
+          Homepage: https://github.com/izzoa/powerhour-generator
+          EOF
+          
+          # Create desktop entry
+          cat > ${DEB_DIR}/usr/share/applications/powerhour-generator.desktop << EOF
+          [Desktop Entry]
+          Name=PowerHour Generator
+          Comment=Create PowerHour video compilations
+          Exec=powerhour-generator
+          Icon=powerhour-generator
+          Terminal=false
+          Type=Application
+          Categories=AudioVideo;Video;
+          Keywords=video;powerhour;compilation;
+          EOF
+          
+          # Copy documentation
+          cp README.md LICENSE ${DEB_DIR}/usr/share/doc/powerhour-generator/
+          cp docs/CHANGELOG.md ${DEB_DIR}/usr/share/doc/powerhour-generator/ 2>/dev/null || true
+          
+          # Create icon (placeholder - replace with actual icon)
+          cp assets/logo.png ${DEB_DIR}/usr/share/icons/hicolor/256x256/apps/powerhour-generator.png
+          
+          # Build DEB package
+          dpkg-deb --build ${DEB_DIR}
+          
+      - name: Upload Linux DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: powerhour-generator_*.deb
+
+  # Build macOS DMG installer
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          brew install ffmpeg
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pyinstaller
+          
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller powerhour.spec --clean --noconfirm
+          
+      - name: Create app bundle
+        run: |
+          VERSION="${{ github.event.inputs.version || '1.0' }}"
+          
+          # The PyInstaller spec should create PowerHourGenerator.app if IS_MACOS is true
+          # Verify the app was created
+          if [ -d "dist/PowerHourGenerator.app" ]; then
+            echo "App bundle created successfully"
+          else
+            echo "Creating app bundle manually..."
+            # Manual app bundle creation if needed
+            APP_DIR="dist/PowerHourGenerator.app"
+            mkdir -p "${APP_DIR}/Contents/MacOS"
+            mkdir -p "${APP_DIR}/Contents/Resources"
+            
+            # Copy executable
+            cp -r dist/PowerHourGenerator/* "${APP_DIR}/Contents/MacOS/"
+            
+            # Create Info.plist
+            cat > "${APP_DIR}/Contents/Info.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleName</key>
+            <string>PowerHour Generator</string>
+            <key>CFBundleDisplayName</key>
+            <string>PowerHour Generator</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.powerhour.generator</string>
+            <key>CFBundleVersion</key>
+            <string>${VERSION}</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${VERSION}</string>
+            <key>CFBundleExecutable</key>
+            <string>PowerHourGenerator</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.13.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+            <key>NSRequiresAquaSystemAppearance</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+          fi
+          
+      - name: Create DMG installer
+        run: |
+          VERSION="${{ github.event.inputs.version || '2.0.0' }}"
+          
+          # Install create-dmg if not present
+          brew install create-dmg || true
+          
+          # Create DMG
+          create-dmg \
+            --volname "PowerHour Generator" \
+            --volicon "assets/logo.png" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "PowerHourGenerator.app" 150 185 \
+            --hide-extension "PowerHourGenerator.app" \
+            --app-drop-link 450 185 \
+            --no-internet-enable \
+            "PowerHourGenerator-${VERSION}-macos.dmg" \
+            "dist/"
+          
+          # Fallback to hdiutil if create-dmg fails
+          if [ ! -f "PowerHourGenerator-${VERSION}-macos.dmg" ]; then
+            echo "Using hdiutil as fallback..."
+            
+            # Create temporary DMG directory
+            mkdir -p dmg_temp
+            cp -r dist/PowerHourGenerator.app dmg_temp/
+            ln -s /Applications dmg_temp/Applications
+            
+            # Create DMG
+            hdiutil create -volname "PowerHour Generator" \
+              -srcfolder dmg_temp \
+              -ov -format UDZO \
+              "PowerHourGenerator-${VERSION}-macos.dmg"
+              
+            # Cleanup
+            rm -rf dmg_temp
+          fi
+          
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: PowerHourGenerator-*.dmg
+
+  # Create GitHub Release
+  create-release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: PowerHour Generator ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            windows-msi/*.msi
+            linux-deb/*.deb
+            macos-dmg/*.dmg
+          body: |
+            # PowerHour Generator ${{ github.ref_name }}
+            
+            ## 🎉 What's New
+            See [CHANGELOG.md](https://github.com/izzoa/powerhour-generator/blob/main/docs/CHANGELOG.md) for detailed changes.
+            
+            ## 📥 Installation
+            
+            ### Windows
+            Download and run the `.msi` installer.
+            
+            ### macOS
+            Download and open the `.dmg` file, then drag PowerHour Generator to Applications.
+            
+            ### Linux
+            Download the `.deb` package and install with:
+            ```bash
+            sudo dpkg -i powerhour-generator_*.deb
+            sudo apt-get install -f  # Fix any dependency issues
+            ```
+            
+            ## 📋 Requirements
+            - FFmpeg (automatically included on Windows/macOS, required on Linux)
+            - 4GB RAM minimum
+            - 2GB free disk space
+            
+            ## 📚 Documentation
+            - [User Guide](https://github.com/izzoa/powerhour-generator/blob/main/docs/USER_GUIDE.md)
+            - [Quick Start](https://github.com/izzoa/powerhour-generator/blob/main/docs/README_GUI.md)
+            
+            ## 🐛 Reporting Issues
+            Please report any issues at: https://github.com/izzoa/powerhour-generator/issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

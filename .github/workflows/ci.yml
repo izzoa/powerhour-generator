@@ -1,0 +1,128 @@
+name: CI Build Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  test-build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ffmpeg || brew upgrade ffmpeg
+          
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install ffmpeg -y
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          
+      - name: Run linting
+        run: |
+          python -m flake8 powerhour/*.py --max-line-length=120 --ignore=E203,W503
+          
+      - name: Run type checking
+        run: |
+          python -m mypy powerhour/*.py --ignore-missing-imports
+        continue-on-error: true
+        
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --cov=powerhour --cov-report=xml --cov-report=term
+        continue-on-error: true  # Tests may not exist yet
+        
+      - name: Test GUI import
+        run: |
+          python -c "from powerhour import PowerHourGUI; print('GUI module imported successfully')"
+          
+      - name: Test processor import
+        run: |
+          python -c "from powerhour import ProcessorThread; print('Processor module imported successfully')"
+          
+      - name: Test PyInstaller build
+        if: matrix.python-version == '3.10'  # Only test build on one Python version
+        run: |
+          pip install pyinstaller
+          pyinstaller --onefile --windowed --name TestBuild powerhour/powerhour_gui.py
+          
+      - name: Upload test build artifacts
+        if: matrix.python-version == '3.10'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-${{ runner.os }}-py${{ matrix.python-version }}
+          path: dist/
+          
+  code-coverage:
+    needs: test-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install coverage codecov
+          
+      - name: Run tests with coverage
+        run: |
+          python -m pytest tests/ --cov=powerhour --cov-report=xml
+        continue-on-error: true
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
