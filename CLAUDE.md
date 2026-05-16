@@ -70,7 +70,8 @@ If you add a new install-method, add the pattern in the correct slot and add tes
 ## Workflow notes
 
 - **OpenSpec is supported but gitignored.** `openspec/` is in `.gitignore`; proposals/designs/specs/tasks are contributor-local. Running `openspec list/status/archive` still works locally. Don't commit the `openspec/` tree.
-- **`__version__`** is defined at `powerhour/__init__.py` and consumed by `ytdlp_updater.USER_AGENT`. Keep it aligned with `setup.py`'s `VERSION` when bumping.
+- **`__version__`** at `powerhour/__init__.py` is the single source of truth for the project version. `setup.py`, `scripts/build.py`, `powerhour.spec` (including the macOS `CFBundleShortVersionString` / `CFBundleVersion` keys), and `Makefile` all derive from it via a build-time regex parse — do not edit them independently. `ytdlp_updater.USER_AGENT` also pulls from it at import time. When cutting a release, edit `__version__` and `docs/CHANGELOG.md`; everything else picks it up automatically.
+- **In-app help strings are documentation.** Dialog bodies (`messagebox.showinfo`/`showerror`), tooltips, status-bar hints, and error messages are subject to the same verification discipline as `docs/*.md`. If a string claims a behavior, the behavior must be implemented. The `Help → Keyboard Shortcuts` dialog was removed in 1.1.0 specifically because it enumerated shortcuts that were never bound; don't reintroduce the menu item without binding the shortcuts.
 - **Logging into the Output Log panel.** Workers emit `{'type': 'log', 'level': 'info|warning|error', 'message': '...'}`. The GUI routes through `log_info`/`log_warning`/`log_error` to the `ScrolledText` widget at `powerhour_gui.py:627` with color-coded tags.
 
 ## Keeping documentation in sync
@@ -79,14 +80,13 @@ Every change ships its own documentation update in the same commit/PR. Three lay
 
 - **`docs/CHANGELOG.md` — update on every change**, no exceptions. Add an entry under `## [Unreleased]` (create that section if absent). Use one of the existing categories: Added / Changed / Fixed / Removed / Deprecated / Security. Bug fixes and refactors count; "no user-visible change" still goes under Changed/Fixed with a one-liner. Roll `[Unreleased]` into a numbered release section when cutting a version.
 - **`README.md` — update on substantial changes.** Substantial means anything that alters: what the project does, how it's invoked, its dependency or system requirements, or its install/uninstall story. New features, new CLI flags, new optional integrations, and breaking changes all qualify. Pure bug fixes and internal refactors do not.
-- **Other `docs/` files — update when their topic is touched.** Map of who covers what so you know where to look:
-  - `docs/README_GUI.md` — GUI installation, prerequisites, status bar, quick start
-  - `docs/USER_GUIDE.md` — end-user task walkthroughs, screenshots, advanced options
-  - `docs/ARCHITECTURE.md` — system design, module boundaries, threading model
-  - `docs/CONTRIBUTING.md` — developer workflow
-  - `docs/RELEASE.md` — release process
+- **Other `docs/` files — update when their topic is touched.** The doc surface is exactly four files; each owns a disjoint scope:
+  - `docs/USER_GUIDE.md` — end-user comprehensive guide: per-OS install (Python, FFmpeg, yt-dlp), GUI walkthrough, CLI reference, configuration schema, troubleshooting, FAQ
+  - `docs/DEVELOPING.md` — contributor onboarding and high-level architecture overview; links into this file (CLAUDE.md) for code-touching specifics
+  - `docs/CHANGELOG.md` — version history (Keep-a-Changelog format)
+  - `docs/RELEASE.md` — maintainer release procedure
 
-If a change touches the GUI flow, check `README_GUI.md` and `USER_GUIDE.md`. If it touches the threading/queue model or module layout, check `ARCHITECTURE.md`. If you can't honestly say "the docs still describe the code accurately" after your change, the change isn't done.
+If a change touches the GUI flow, check `USER_GUIDE.md`. If it touches the threading/queue model or module layout, the human-facing reference is `DEVELOPING.md` and the authoritative reference is this file — keep both in sync. If you can't honestly say "the docs still describe the code accurately" after your change, the change isn't done.
 
 ## Things to know before editing
 

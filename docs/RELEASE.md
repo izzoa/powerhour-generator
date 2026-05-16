@@ -1,295 +1,117 @@
-# Release Guide for PowerHour Generator
+# Release Procedure
 
-## Version 1.0.0
+Maintainer-only guide for cutting a release of PowerHour Generator. Intentionally version-agnostic; substitute your target version (e.g., `1.2.0`) wherever you see `<version>`.
 
-### 🎉 Release Overview
+## Pre-release checklist
 
-PowerHour Generator v1.0.0 marks the first official release with the introduction of a full-featured GUI application alongside the original CLI tool. This release transforms the user experience while maintaining backward compatibility.
+- [ ] `make ci` is green (clean install, tests, lint, build all succeed).
+- [ ] `docs/CHANGELOG.md` has a `[Unreleased]` section with the changes about to ship. Roll it into a `## [<version>] - YYYY-MM-DD` heading.
+- [ ] `powerhour/__init__.py:__version__` is bumped to `<version>`. Everything else (`setup.py`, `scripts/build.py`, `powerhour.spec`, `Makefile`) derives from this — nothing else needs editing.
+- [ ] `README.md` reflects any user-visible changes (per [CLAUDE.md § Keeping documentation in sync](../CLAUDE.md#keeping-documentation-in-sync) thresholds).
+- [ ] Any in-flight OpenSpec changes for the release are archived (`openspec archive <change-name>`).
 
-### 📋 Pre-Release Checklist
-
-Before creating a release, ensure:
-
-- [ ] All tests pass (`make test`)
-- [ ] Code is linted and formatted (`make lint format`)
-- [ ] Documentation is up to date
-- [ ] Version numbers updated in:
-  - [ ] `setup.py`
-  - [ ] `powerhour.spec`
-  - [ ] `CHANGELOG.md`
-  - [ ] `Makefile`
-- [ ] Dependencies are minimal and documented
-- [ ] FFmpeg installation instructions are clear
-
-### 🔨 Building Releases
-
-#### Quick Build (All Platforms)
+## Build
 
 ```bash
-# Clean, test, and build
-make clean test build release
+# Clean, install, test, build everything
+make clean
+make install-dev
+make ci                  # runs install, test, lint, build
+make build-all           # exe + wheel + source
 ```
 
-#### Platform-Specific Builds
+For platform-specific builds (must run on the target OS — no cross-compilation):
 
-##### Windows
 ```bash
-# Using PowerShell or Git Bash
-python build.py --platform windows --clean --release
+python scripts/build.py --platform windows --clean --release
+python scripts/build.py --platform macos --clean --release
+python scripts/build.py --platform linux --clean --release
 ```
 
-##### macOS
-```bash
-# Build app bundle
-python build.py --platform macos --clean --release
-```
+Outputs land in `dist/` (PyInstaller) and `releases/` (zipped/tar'd release packages).
 
-##### Linux
-```bash
-# Build AppImage or tar.gz
-python build.py --platform linux --clean --release
-```
-
-#### Python Package
-```bash
-# Build wheel and source distribution
-make build-wheel build-source
-```
-
-### 📦 Release Artifacts
+## Release artifacts
 
 Each release should include:
 
-1. **Executable Packages**
-   - Windows: `PowerHourGenerator-1.0.0-windows.zip`
-   - macOS: `PowerHourGenerator-1.0.0-macos.tar.gz`
-   - Linux: `PowerHourGenerator-1.0.0-linux.tar.gz`
+- **Executable bundles** — one per OS, produced by `make build-exe` + `scripts/build.py --release`:
+  - `PowerHourGenerator-<version>-windows.zip`
+  - `PowerHourGenerator-<version>-macos.tar.gz`
+  - `PowerHourGenerator-<version>-linux.tar.gz`
+- **Python packages** — produced by `make build-wheel` + `make build-source`:
+  - `powerhour_generator-<version>-py3-none-any.whl`
+  - `powerhour-generator-<version>.tar.gz`
+- **Documentation bundle** — `README.md` + everything in `docs/` is included automatically by `scripts/build.py` in each release zip/tarball.
 
-2. **Python Packages**
-   - Wheel: `powerhour_generator-1.0.0-py3-none-any.whl`
-   - Source: `powerhour-generator-1.0.0.tar.gz`
-
-3. **Documentation Bundle**
-   - All markdown documentation files
-   - Quick start guides
-   - API documentation (if applicable)
-
-### 🚀 Release Process
-
-#### 1. Final Testing
-
-```bash
-# Run comprehensive tests
-make clean
-make install-dev
-make test
-make lint
-```
-
-#### 2. Build All Distributions
-
-```bash
-# Build everything
-make build-all
-python build.py --type all --release
-```
-
-#### 3. Test Installations
+## Smoke-test before tagging
 
 ```bash
 # Test pip installation
 pip install dist/powerhour_generator-*.whl
-powerhour-gui  # Test GUI
-powerhour --help  # Test CLI
+powerhour-gui            # confirms GUI entry point works
+powerhour --help         # confirms CLI entry point works
+pip uninstall powerhour-generator
 
-# Test executable
-cd releases/PowerHourGenerator-*/
-./PowerHourGenerator  # Linux/macOS
-# or
-PowerHourGenerator.exe  # Windows
+# Test executable on a clean shell
+cd releases/PowerHourGenerator-<version>-<platform>/
+./PowerHourGenerator     # Linux/macOS
+PowerHourGenerator.exe   # Windows
 ```
 
-#### 4. Create GitHub Release
+On macOS, verify the `.app` bundle works when launched from Finder (this exercises the [frozen-`.app` PATH gap fallback](../CLAUDE.md#macos-frozen-app-path-gap) in the yt-dlp updater).
 
-1. Tag the release:
-   ```bash
-   git tag -a v1.0.0 -m "Release version 1.0.0"
-   git push origin v1.0.0
-   ```
+## Tag and push
 
-2. Create release on GitHub:
-   - Go to https://github.com/izzoa/powerhour-generator/releases
-   - Click "Create a new release"
-   - Select the tag `v1.0.0`
-   - Title: "PowerHour Generator v1.0.0 - GUI Release"
-   - Upload all artifacts from `releases/` directory
+```bash
+git tag -a v<version> -m "Release version <version>"
+git push origin v<version>
+```
 
-3. Write release notes (template below)
+## Create the GitHub release
 
-#### 5. Publish to PyPI (Optional)
+1. Visit https://github.com/izzoa/powerhour-generator/releases and click "Create a new release."
+2. Select tag `v<version>`.
+3. Title: `PowerHour Generator v<version>`.
+4. Body: copy from the matching `## [<version>]` block in `docs/CHANGELOG.md`. The CI workflow at `.github/workflows/release.yml` may produce a draft for you.
+5. Upload all artifacts from `releases/` and `dist/`.
+6. Publish.
+
+## Publish to PyPI
 
 ```bash
 # Upload to Test PyPI first
 make upload-test
 
-# Test installation from Test PyPI
-pip install -i https://test.pypi.org/simple/ powerhour-generator
+# Verify install from Test PyPI
+pip install -i https://test.pypi.org/simple/ powerhour-generator==<version>
 
-# If successful, upload to PyPI
+# Publish to real PyPI
 make upload-pypi
 ```
 
-### 📝 Release Notes Template
+## Post-release verification
 
-```markdown
-# PowerHour Generator v1.0.0
+- [ ] Download the GitHub release artifacts and confirm checksums (if attached) match.
+- [ ] `pip install powerhour-generator==<version>` on a clean venv succeeds.
+- [ ] Run the GUI against a small test set (3–5 videos) to confirm processing still works end-to-end.
+- [ ] Watch GitHub Issues for the first 24 hours.
 
-## 🎉 What's New
+## Hotfix / rollback
 
-### GUI Application
-- Brand new graphical user interface built with Tkinter
-- Real-time progress tracking and visualization
-- Drag-and-drop file selection
-- Configuration persistence
-- Professional threading architecture
+If a critical bug ships:
 
-### Features
-- ✅ 60-minute video compilation from folder or YouTube
-- ✅ Automatic audio normalization
-- ✅ Customizable fade transitions
-- ✅ Common clip insertion between segments
-- ✅ Cross-platform compatibility
+1. Mark the GitHub release as a pre-release while you investigate.
+2. Yank the affected PyPI version: `twine yank powerhour-generator -v <version> -m "<reason>"`.
+3. Branch from `main`, apply the fix, bump `__version__` to a patch release (e.g., `<version>+1.patch`), update `CHANGELOG.md`, and re-run this entire procedure.
 
-## 📥 Installation
+Never delete a published GitHub release or PyPI version — yank, don't delete; the package index records depend on version numbers being stable.
 
-### Quick Start (Executable)
-Download the appropriate package for your platform and extract.
+## Release cadence
 
-### Python Package
-```bash
-pip install powerhour-generator
-```
+There's no fixed schedule. Cut a release when:
 
-### Requirements
-- Python 3.8+
-- FFmpeg and FFprobe
-- Optional: yt-dlp for YouTube support
+- A user-visible feature lands.
+- A behavior bug or security issue is fixed.
+- Enough internal changes have accumulated that the version-sync metadata is meaningfully stale.
 
-## 🚀 Usage
-
-### GUI Mode
-```bash
-powerhour-gui
-# or run the executable directly
-```
-
-### CLI Mode (Legacy)
-```bash
-powerhour --input /path/to/videos --output result.mp4
-```
-
-## 🐛 Bug Fixes
-- Fixed memory leak in video processing
-- Improved error handling for corrupt files
-- Better cleanup of temporary files
-
-## 💔 Breaking Changes
-None - Full backward compatibility maintained
-
-## 📚 Documentation
-- [User Guide](USER_GUIDE.md)
-- [GUI Quick Start](README_GUI.md)
-- [Architecture](ARCHITECTURE.md)
-
-## 🙏 Acknowledgments
-Thanks to all contributors and testers!
-
-## 📋 Known Issues
-- Large video sets (>100GB) may require significant disk space
-- Some exotic codecs may not be supported
-
-## 🔮 Next Release Preview
-- Batch processing queue
-- Video preview thumbnails
-- Dark mode theme
-```
-
-### 🧪 Post-Release Testing
-
-After release, verify:
-
-1. **Download Testing**
-   - Download from GitHub releases
-   - Verify checksums (if provided)
-   - Test on clean system
-
-2. **Installation Testing**
-   ```bash
-   # Test pip installation
-   pip install powerhour-generator
-   
-   # Test executable
-   ./PowerHourGenerator --version
-   ```
-
-3. **Functionality Testing**
-   - Process small test set (3-5 videos)
-   - Process full set (60 videos)
-   - Test cancellation
-   - Verify output quality
-
-### 🔄 Rollback Plan
-
-If critical issues are found:
-
-1. Mark release as pre-release on GitHub
-2. Yank package from PyPI: `pip install twine && twine yank powerhour-generator==1.0.0`
-3. Document issues in hotfix branch
-4. Release patch version (1.0.1) with fixes
-
-### 📊 Success Metrics
-
-Track release success:
-
-- GitHub release downloads
-- PyPI download statistics
-- Issue reports (aim for <5 critical in first week)
-- User feedback on improvements
-
-### 🛠️ Maintenance
-
-Post-release maintenance:
-
-1. **Monitor Issues**
-   - Check GitHub issues daily for first week
-   - Respond to user questions
-   - Track common problems
-
-2. **Patch Releases**
-   - Critical fixes: Release immediately (1.0.1)
-   - Minor fixes: Bundle for next release (1.1.0)
-   
-3. **Documentation Updates**
-   - Update FAQ based on user questions
-   - Improve unclear sections
-   - Add troubleshooting guides
-
-### 📅 Release Schedule
-
-- **Major Releases (X.0.0)**: Annually
-- **Minor Releases (X.Y.0)**: Quarterly
-- **Patch Releases (X.Y.Z)**: As needed
-
-### 🔐 Security
-
-For security issues:
-1. Do not create public issue
-2. Email security@powerhour-generator.com
-3. Follow responsible disclosure
-4. Release security patch immediately
-
----
-
-**Last Updated**: September 2025  
-**Maintainer**: Anthony Izzo
-**Contact**: anthony@izzo.one
+Patch releases for fixes; minor releases for additive features; major releases for breaking changes (license change, removed CLI behavior, removed config keys, etc.).

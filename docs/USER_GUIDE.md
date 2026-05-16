@@ -1,595 +1,223 @@
-# PowerHour Video Generator - User Guide
+# PowerHour Generator — User Guide
 
-## Complete Guide to Creating PowerHour Videos
+Comprehensive guide to installing PowerHour Generator and using it to make hour-long party videos. If you just want to clone-and-run, the [project README](../README.md) has a 60-second quickstart; this is the long form.
 
-### Table of Contents
-1. [Introduction](#introduction)
-2. [Getting Started](#getting-started)
-3. [Main Interface Overview](#main-interface-overview)
-4. [Step-by-Step Tutorial](#step-by-step-tutorial)
-5. [Advanced Features](#advanced-features)
-6. [Menu Options](#menu-options)
-7. [Presets and Configurations](#presets-and-configurations)
-8. [Understanding Progress Indicators](#understanding-progress-indicators)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Tips and Best Practices](#tips-and-best-practices)
-11. [FAQ](#frequently-asked-questions)
+## What is a PowerHour?
 
----
+A PowerHour is a party game where players take a sip of beer every minute for an hour, traditionally accompanied by a video that changes every 60 seconds. This tool builds that video for you: it takes a folder of videos (or a YouTube playlist), samples a random 60-second clip from each, sandwiches a short transition clip between them, normalizes the audio so no clip blows out anyone's ears, and stitches the whole thing into a single hour-long MP4.
 
-## Introduction
+## Contents
 
-PowerHour Video Generator creates hour-long party videos by combining 60 one-minute clips with smooth transitions. Perfect for:
-- Party games and drinking games
-- Music video compilations
-- Highlight reels
-- Custom video mixes
+- [Install](#install)
+- [Running the GUI](#running-the-gui)
+- [Running the CLI](#running-the-cli)
+- [Configuration](#configuration)
+- [Keeping yt-dlp up to date](#keeping-yt-dlp-up-to-date)
+- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
 
-### What is a PowerHour?
-A PowerHour is traditionally a drinking game where participants take a shot of beer every minute for an hour. This tool creates the accompanying video that changes every minute, typically featuring music videos, movie clips, or custom content.
+## Install
 
----
+PowerHour Generator runs on Windows 10+, macOS 10.13+, and Linux (Ubuntu 18.04+ and equivalents). CI exercises Python 3.8–3.11 on all three platforms.
 
-## Getting Started
+### 1. Python 3.8 or newer
 
-### First Launch
-When you first launch the application:
+- **Windows:** download from [python.org](https://www.python.org/downloads/) and tick "Add Python to PATH" during install.
+- **macOS:** `brew install python3`
+- **Linux (Debian/Ubuntu):** `sudo apt install python3 python3-pip`
 
-1. **Check Dependencies**: The app will verify FFmpeg is installed
-2. **Load Configuration**: Previous settings are automatically restored
-3. **Interface Ready**: All controls are enabled and ready to use
+Verify: `python3 --version` should print 3.8 or higher.
 
-*[Screenshot: Main window on first launch]*
+### 2. FFmpeg
 
-### Understanding the Layout
+FFmpeg is the engine that does the actual video work. It must be on your `PATH`.
 
-The interface is divided into five main sections:
+- **Windows:** download from [ffmpeg.org](https://ffmpeg.org/download.html), extract, and add the `bin` directory to your system PATH.
+- **macOS:** `brew install ffmpeg`
+- **Linux:** `sudo apt install ffmpeg`
 
-1. **Input Parameters** (Top)
-   - Video source selection
-   - Common clip selection
-   - Fade duration control
-   - Output file specification
+Verify: `ffmpeg -version` and `ffprobe -version` should both print version info.
 
-2. **Control Panel** (Middle)
-   - Start Processing button
-   - Cancel button
-   - Status display
+### 3. PowerHour Generator itself
 
-3. **Progress Tracking** (Center)
-   - Current video progress
-   - Overall progress
-   - ETA and speed indicators
-
-4. **Output Log** (Bottom)
-   - Real-time processing messages
-   - Error and warning display
-   - Clear log button
-
-5. **Menu Bar** (Top)
-   - Options menu
-   - Help menu
-
----
-
-## Main Interface Overview
-
-### Input Parameters Section
-
-#### Video Source
-- **Purpose**: Select the folder containing your video files or paste a playlist URL
-- **Browse Button**: Opens folder selection dialog
-- **Dropdown**: Shows recent sources for quick access
-- **Validation**: Green border = valid, Red border = invalid
-
-#### Common Clip
-- **Purpose**: Select the transition video that plays between each main clip
-- **Recommended**: 3-5 second clips work best
-- **Browse Button**: Opens file selection dialog
-- **Dropdown**: Recent clips for reuse
-
-#### Fade Duration
-- **Range**: 0-10 seconds
-- **Default**: 3 seconds
-- **Effect**: Controls how smoothly videos transition
-- **Tip**: Higher values create smoother but longer transitions
-
-#### Output File
-- **Default**: powerhour_output.mp4
-- **Save As Button**: Choose location and filename
-- **Format**: MP4 recommended for compatibility
-
-### Control Section
-
-#### Start Processing Button (Green)
-- **Function**: Begins video processing
-- **State**: Disabled during processing
-- **Validation**: Checks all inputs before starting
-
-#### Cancel Button (Red)
-- **Function**: Stops current processing
-- **State**: Only enabled during processing
-- **Confirmation**: Asks before cancelling
-
-#### Status Display
-Shows current operation:
-- "Ready" - Waiting to start
-- "Processing..." - Working on videos
-- "Complete" - Finished successfully
-- "Error" - Problem occurred
-
----
-
-## Step-by-Step Tutorial
-
-### Basic PowerHour Creation
-
-#### Step 1: Prepare Your Videos
-1. Collect at least 60 video files
-2. Ensure each is at least 80 seconds long
-3. Place them in a single folder
-
-*[Screenshot: Folder with video files]*
-
-#### Step 2: Launch the Application
 ```bash
-python powerhour_gui.py
+git clone https://github.com/izzoa/powerhour-generator.git
+cd powerhour-generator
+pip install -r requirements.txt
 ```
 
-#### Step 3: Select Video Source
-1. Click "Browse" next to Video Source
-2. Navigate to your video folder
-3. Select the folder and click "OK"
-4. The path appears with a green validation border
+The required deps are `Pillow` and `pyperclip`; both come from PyPI.
 
-*[Screenshot: Video source selection]*
+### 4. yt-dlp (optional, for YouTube playlist URLs)
 
-#### Step 4: Choose Common Clip
-1. Click "Browse" next to Common Clip
-2. Select your transition video file
-3. This clip plays between each main video
+Only needed if you're going to point the source field at a YouTube/playlist URL instead of a local folder. The GUI's status bar shows the installed version and can update it for you, but you need at least one initial install. Pick the method that matches your environment:
 
-*[Screenshot: Common clip selection]*
+| Platform | Command |
+|---|---|
+| macOS (Homebrew) | `brew install yt-dlp` |
+| Linux (apt) | `sudo apt install yt-dlp` *(often lags upstream — pipx is better)* |
+| Windows (Chocolatey) | `choco install yt-dlp` |
+| Cross-platform (pipx, recommended) | `pipx install yt-dlp` |
+| Standalone binary | grab from the [yt-dlp releases page](https://github.com/yt-dlp/yt-dlp/releases) and put on PATH |
 
-#### Step 5: Configure Settings
-1. Set Fade Duration (3 seconds recommended)
-2. Choose output location with "Save As"
-3. Verify all fields have green validation
+The GUI's in-app updater knows how to upgrade Homebrew, pipx, pip-in-venv, Chocolatey, and standalone-binary installs automatically. For others (apt, conda, asdf/pyenv/mise shims, snap, flatpak, scoop, winget, npm, etc.) it shows you the right command to run instead of guessing.
 
-*[Screenshot: Configured settings]*
+### Quick verification
 
-#### Step 6: Start Processing
-1. Click the green "Start Processing" button
-2. Watch progress in real-time
-3. Monitor the log for any issues
-4. Processing takes 10-30 minutes typically
-
-*[Screenshot: Processing in progress]*
-
-#### Step 7: Completion
-1. "Processing Complete" dialog appears
-2. Your video is saved to the specified location
-3. Recent items are saved for next time
-
-*[Screenshot: Completion dialog]*
-
-### Using Online Playlists
-
-#### YouTube Playlist Download
-1. Copy the playlist URL from YouTube
-2. Paste directly into Video Source field
-3. Ensure yt-dlp is installed
-4. Processing will download then process videos
-
-Example URL formats:
-- `https://www.youtube.com/playlist?list=PLxxxxxx`
-- `https://www.youtube.com/watch?v=xxxx&list=PLxxxx`
-
-#### Keeping yt-dlp Up to Date
-
-YouTube changes extractors frequently, so an outdated yt-dlp is the most
-common cause of download failures. The bottom status bar shows your installed
-yt-dlp version next to a freshness indicator (**• Up to date** or
-**• Update available: X.Y.Z**). Click the action button to upgrade:
-
-- **Update yt-dlp** — runs the upgrade command appropriate to your install
-  method (Homebrew, pipx, pip in a venv, Chocolatey, or a standalone binary).
-  Output streams into the Output Log panel.
-- **Check for Update** — re-queries PyPI when you're already current, in case
-  a newer release has appeared since launch.
-- **How to install** — shown when yt-dlp is not installed; opens the project
-  README's installation section in your browser.
-
-If the GUI detects an install method it cannot safely upgrade (apt/dnf, conda,
-asdf/pyenv/mise shims, nix, snap, flatpak, scoop, winget, npm, etc.), the
-Output Log will display a copy-paste command appropriate to that manager
-instead of running an automatic upgrade.
-
-Note for nightly-channel users: PyPI is queried for the latest *stable*
-release. If your installed nightly is newer than PyPI's stable version, the
-status bar will read "Up to date" — the GUI will not prompt you to downgrade.
-
----
-
-## Advanced Features
-
-### Expert Mode
-
-#### Enabling Expert Mode
-1. Go to Options → Expert Mode
-2. Additional controls appear in progress section
-3. FFmpeg parameters become editable
-
-#### FFmpeg Parameters
-Default: `-c:v libx264 -preset medium -crf 23`
-
-Modify for:
-- **Faster encoding**: `-preset ultrafast`
-- **Better quality**: `-crf 18`
-- **Smaller files**: `-crf 28`
-
-*[Screenshot: Expert mode panel]*
-
-### Preset System
-
-#### Built-in Presets
-
-**Quick Party Mix**
-- Medium quality
-- Fast processing
-- 2-second fades
-- Optimized for parties
-
-**High Quality Archive**
-- Maximum quality
-- Slower processing
-- 3-second fades
-- Best for permanent collections
-
-**Fast Processing**
-- Low quality
-- Fastest encoding
-- 1-second fades
-- When time is critical
-
-#### Custom Presets
-
-##### Saving a Preset
-1. Configure all settings as desired
-2. Options → Presets → Save Current Settings
-3. Enter a memorable name
-4. Preset is saved for future use
-
-##### Loading a Preset
-1. Options → Presets → Load Preset
-2. Select from your saved presets
-3. All settings update immediately
-
----
-
-## Menu Options
-
-### Options Menu
-
-#### Video Quality
-- **Low**: Fast processing, smaller files (CRF 28)
-- **Medium**: Balanced quality/speed (CRF 23)
-- **High**: Best quality, larger files (CRF 18)
-
-#### Audio Normalization
-- **Enabled** (default): Consistent volume across clips
-- **Disabled**: Original audio levels preserved
-
-#### Output Format
-- **MP4**: Best compatibility (recommended)
-- **AVI**: Legacy format support
-- **MKV**: Advanced features, larger files
-
-### Help Menu
-
-#### About PowerHour
-Shows version and copyright information
-
-#### User Guide
-Opens this comprehensive guide
-
-#### Keyboard Shortcuts
-Quick reference for all shortcuts
-
-#### View Error Log
-Opens error log in system text editor
-
-#### Check for Updates
-Verifies you have the latest version
-
----
-
-## Presets and Configurations
-
-### Configuration Persistence
-
-The following settings are saved automatically:
-- Window size and position
-- Last used video source
-- Last used common clip
-- Fade duration preference
-- Output directory
-- Quality settings
-- Recent items lists (last 10)
-
-### Configuration File Locations
-
-#### Windows
-`%APPDATA%\PowerHour\config.json`
-
-#### macOS
-`~/Library/Application Support/PowerHour/config.json`
-
-#### Linux
-`~/.config/PowerHour/config.json`
-
-### Manual Configuration Editing
-
-Example config.json:
-```json
-{
-    "window_geometry": "800x600",
-    "last_video_source": "/Users/videos/",
-    "last_common_clip": "/Users/transition.mp4",
-    "default_fade_duration": 3.0,
-    "video_quality": "medium",
-    "audio_normalization": true,
-    "recent_sources": [
-        "/Users/videos/",
-        "/Users/music_videos/"
-    ]
-}
+```bash
+python3 --version       # 3.8 or higher
+ffmpeg -version         # any recent version
+ffprobe -version
+yt-dlp --version        # only if you installed yt-dlp
 ```
 
----
+## Running the GUI
 
-## Understanding Progress Indicators
-
-### Current Video Progress
-- Shows encoding progress for individual clips
-- Resets for each video
-- 0-100% scale
-
-### Overall Progress
-- Tracks total videos processed
-- Shows "X/60 videos"
-- Main indicator of completion
-
-### ETA (Estimated Time Remaining)
-- Calculated from average processing speed
-- Updates after each video
-- Format: "~X minutes Y seconds remaining"
-
-### Processing Speed
-- Shows videos per minute
-- Rolling average of last 10 videos
-- Helps estimate total time
-
-### Processing Stages
-
-1. **Initializing**: Setting up processing
-2. **Downloading**: Getting online videos (if URL)
-3. **Analyzing**: Checking video durations and loudness
-4. **Encoding**: Processing individual clips
-5. **Finalizing**: Creating final video
-
-### Status Bar Information
-
-#### Left: Hints
-- Context-sensitive tips
-- Current mode indicators
-
-#### Center: Current Operation
-- Detailed processing status
-- File being processed
-
-#### Right: Resource Usage
-- CPU percentage
-- RAM usage
-- Updates every 2 seconds
-
----
-
-## Troubleshooting Guide
-
-### Common Problems and Solutions
-
-#### Problem: "FFmpeg not found"
-**Solution:**
-1. Verify FFmpeg installation: `ffmpeg -version`
-2. Add FFmpeg to system PATH
-3. Restart the application
-
-#### Problem: "No valid videos found"
-**Causes:**
-- Videos shorter than 80 seconds
-- Unsupported formats
-- Empty folder
-
-**Solution:**
-- Use longer videos (80+ seconds)
-- Convert to supported formats (MP4, AVI, MKV)
-- Check folder contains video files
-
-#### Problem: Processing is very slow
-**Solutions:**
-1. Use Low Quality preset
-2. Close other applications
-3. Process fewer videos at once
-4. Check available disk space (need 5+ GB)
-
-#### Problem: "Permission denied" errors
-**Windows:**
-- Run as Administrator
-- Check antivirus settings
-
-**macOS/Linux:**
-- Check folder permissions: `ls -la`
-- Use chmod if needed: `chmod 755 folder`
-
-#### Problem: Application won't start
-**Check:**
-1. Python version: `python --version` (need 3.8+)
-2. Tkinter installed: `python -m tkinter`
-3. No syntax errors: Check console output
-
-#### Problem: Output video has no sound
-**Possible causes:**
-- Source videos have no audio
-- Audio codec issues
-
-**Solution:**
-- Verify source videos have audio
-- Enable audio normalization
-- Try different output format
-
-### Reading Error Logs
-
-#### Log Levels
-- **Info (Black)**: Normal operations
-- **Warning (Orange)**: Non-critical issues
-- **Error (Red)**: Problems requiring attention
-
-#### Finding Detailed Logs
-1. Help → View Error Log
-2. Look for timestamps
-3. Search for "ERROR" or "FAILED"
-4. Note FFmpeg command output
-
-### Getting Help
-
-#### Information to Provide
-1. Operating system and version
-2. Python version
-3. FFmpeg version
-4. Complete error message
-5. Steps to reproduce
-6. Screenshots if applicable
-
----
-
-## Tips and Best Practices
-
-### Video Selection
-1. **Quality**: Use similar quality videos for consistency
-2. **Content**: Mix genres for variety
-3. **Duration**: Longer videos give more random selection
-4. **Format**: Stick to common formats (MP4)
-
-### Performance Optimization
-1. **Local Storage**: Process from local drives, not network
-2. **SSD Preferred**: Faster read/write speeds
-3. **Close Programs**: Free up CPU and RAM
-4. **Batch Size**: Process 60-80 videos maximum
-
-### Quality vs Speed Trade-offs
-
-| Setting | Quality | Speed | File Size |
-|---------|---------|-------|-----------|
-| Low | ★★☆☆☆ | ★★★★★ | Small |
-| Medium | ★★★★☆ | ★★★☆☆ | Medium |
-| High | ★★★★★ | ★☆☆☆☆ | Large |
-
-### Common Clip Best Practices
-1. **Duration**: 3-5 seconds optimal
-2. **Content**: Logo, countdown, or transition effect
-3. **Audio**: Include audio cue for timing
-4. **Resolution**: Match your target output (720p)
-
-### Output Recommendations
-1. **Filename**: Include date for organization
-2. **Location**: Save to drive with space
-3. **Backup**: Keep source videos after processing
-4. **Format**: MP4 for maximum compatibility
-
----
-
-## Frequently Asked Questions
-
-### General Questions
-
-**Q: How long does processing take?**
-A: Typically 10-30 minutes for 60 videos, depending on:
-- Computer speed
-- Quality settings
-- Video resolutions
-- Disk speed
-
-**Q: Can I use videos shorter than 60 seconds?**
-A: Yes, but they must be at least 80 seconds to allow for random start points and 60-second extraction.
-
-**Q: What video formats are supported?**
-A: Any format FFmpeg supports: MP4, AVI, MKV, MOV, WMV, FLV, and more.
-
-**Q: Can I pause and resume processing?**
-A: Not currently. Processing must complete or be cancelled entirely.
-
-### Technical Questions
-
-**Q: Why does it need 80-second videos for 60-second clips?**
-A: The extra 20 seconds allows random start points (10-70 seconds) for variety.
-
-**Q: How does audio normalization work?**
-A: Uses FFmpeg's loudnorm filter to analyze and adjust audio to -23 LUFS standard.
-
-**Q: Can I change the output resolution?**
-A: Currently fixed at 1280x720. Modify source code for other resolutions.
-
-**Q: Is GPU acceleration supported?**
-A: Not by default. Expert users can modify FFmpeg parameters for hardware encoding.
-
-### Troubleshooting Questions
-
-**Q: Why does my output have black bars?**
-A: Videos are scaled to 1280x720. Different aspect ratios get letterboxing.
-
-**Q: Can I process videos from network drives?**
-A: Yes, but it's much slower. Copy locally for best performance.
-
-**Q: Why do some videos fail to process?**
-A: Usually codec issues. Check log for specific FFmpeg errors.
-
-**Q: How do I process more than 60 videos?**
-A: The app randomly selects 60 from your folder if more are present.
-
----
-
-## Appendix
-
-### Keyboard Shortcuts Reference
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+O | Browse video source |
-| Ctrl+S | Save output as |
-| Ctrl+R | Start processing |
-| Ctrl+C | Cancel processing |
-| Ctrl+L | Clear log |
-| Ctrl+Q | Quit |
-| F1 | Show help |
-| F5 | Refresh validation |
-| F11 | Toggle expert mode |
-
-### File Structure
-```
-powerhour-generator/
-├── powerhour_gui.py        # Main GUI application
-├── powerhour_processor.py  # Processing thread
-├── README_GUI.md           # Quick start guide
-├── USER_GUIDE.md          # This comprehensive guide
-└── config/                # Configuration storage
+```bash
+python -m powerhour.powerhour_gui
+# or, if you cloned the repo and have make:
+make run-gui
 ```
 
-### Support Resources
-- Error log location varies by OS (see Configuration section)
-- FFmpeg documentation: https://ffmpeg.org/documentation.html
-- Python Tkinter guide: https://docs.python.org/3/library/tkinter.html
+The window is divided into five regions:
 
----
+1. **Input parameters** (top) — Video source field (folder path or playlist URL), Common Clip field (path to your transition video), Fade Duration spinner, Output File field.
+2. **Control panel** — Start Processing (green) and Cancel (red) buttons, plus a status label.
+3. **Progress** — Current-video progress bar, overall progress bar, ETA and processing-speed indicators.
+4. **Output log** — Color-coded log of what's happening (info in black, warnings in orange, errors in red).
+5. **Status bar** (bottom) — Contextual hint, current operation, CPU/RAM usage (if `psutil` is installed), and the yt-dlp version/update controls.
 
-*PowerHour Video Generator v1.0.0 - User Guide*  
-*Last updated: 2024*
+A typical run:
+
+1. Click **Browse** next to Video Source and pick a folder of videos (or paste a YouTube playlist URL into the field).
+2. Click **Browse** next to Common Clip and pick a short transition video (3–5 seconds works well).
+3. Set fade duration (default 3.0 seconds is fine for most cases).
+4. Click **Save As** next to Output File to pick where the final MP4 lands.
+5. Click **Start Processing**.
+
+Processing takes roughly 10–30 minutes depending on your machine, your source video sizes, and the quality preset. The output log shows what FFmpeg is doing if you want to follow along.
+
+The menu bar has two top-level menus:
+
+- **Options** — Video Quality (Low/Medium/High = CRF 28/23/18), Audio Normalization toggle, Output Format (MP4/AVI/MKV), Presets (save/load + three built-ins: Quick Party Mix, High Quality Archive, Fast Processing).
+- **Help** — About PowerHour (version info), User Guide (built-in mini help), View Error Log (opens the log file in your OS default editor).
+
+> Heads up: this version doesn't bind any keyboard shortcuts. Earlier docs claimed `Ctrl+O`/`Ctrl+R`/`F11` etc. were available — they weren't. If you want shortcuts wired up, that's a future change.
+
+## Running the CLI
+
+The CLI is a thin wrapper around the same processing engine, intended for scripts and CI. It takes four positional arguments and no flags.
+
+```bash
+python -m powerhour.powerhour_generator <source> <transition.mp4> <fade-seconds> <output.mp4>
+```
+
+| Position | Meaning |
+|---|---|
+| `<source>` | Path to a folder of videos, **or** a `http://`/`https://` URL pointing at a YouTube playlist |
+| `<transition.mp4>` | Path to the short clip that plays between each video |
+| `<fade-seconds>` | Crossfade duration on each clip, as a float (e.g., `3` or `2.5`) |
+| `<output.mp4>` | Output filename (anything FFmpeg can write to) |
+
+Examples:
+
+```bash
+# Local folder
+python -m powerhour.powerhour_generator ./videos ./transition.mp4 3 powerhour.mp4
+
+# YouTube playlist
+python -m powerhour.powerhour_generator "https://youtube.com/playlist?list=..." ./transition.mp4 3 powerhour.mp4
+```
+
+When given a URL, the CLI downloads the playlist via `yt-dlp` into a temporary directory and processes it from there.
+
+## Configuration
+
+The GUI saves your settings between runs. The config file is JSON and lives at:
+
+| OS | Path |
+|---|---|
+| Windows | `%APPDATA%\PowerHour\config.json` |
+| macOS | `~/Library/Application Support/PowerHour/config.json` |
+| Linux | `~/.config/PowerHour/config.json` |
+
+The error log file lives alongside it as `error.log`.
+
+Persisted keys:
+
+- `window_geometry` — restored on next launch
+- `last_video_source`, `last_common_clip`, `last_output_dir` — pre-fill the corresponding fields
+- `default_fade_duration` — pre-fill the spinner (default `3.0`)
+- `recent_sources`, `recent_common_clips`, `recent_outputs` — dropdown history (last `max_recent_items`, default 10)
+- `max_recent_items` — cap on dropdown history
+- `video_quality` — `"low"`, `"medium"`, or `"high"`
+- `audio_normalization` — boolean
+- `output_format` — `"mp4"`, `"avi"`, or `"mkv"`
+- `expert_mode` — boolean
+- `presets` — dictionary of named preset bundles
+
+You can edit this file directly while the GUI is closed if you want.
+
+## Keeping yt-dlp up to date
+
+YouTube changes its internal extractors often, so a stale yt-dlp is the most common cause of "playlist URL failed to download." The GUI's status bar shows your installed version with a freshness indicator (`• Up to date` or `• Update available: X.Y.Z`) and a button next to it:
+
+- **Update yt-dlp** — runs the upgrade command that matches your install method (Homebrew, pipx, pip-in-venv, Chocolatey, or replacing a standalone binary). Output streams into the log panel.
+- **Check for Update** — re-queries PyPI when you're already current, in case a newer release dropped since launch.
+- **How to install** — shown when yt-dlp isn't installed at all; opens the install instructions in your browser.
+
+If the GUI detects an install method it can't safely upgrade (apt/dnf, conda, asdf/pyenv/mise shims, nix, snap, flatpak, scoop, winget, npm, etc.), it shows you a copy-paste command appropriate to that manager instead of running anything automatically.
+
+Note for nightly-channel users: the launch-time check compares against PyPI's *stable* release. If your installed nightly is newer than PyPI's latest stable, the status bar will say "Up to date" — the GUI will not prompt you to downgrade.
+
+## Troubleshooting
+
+### "FFmpeg not found"
+Verify with `ffmpeg -version` in a terminal. If that fails, FFmpeg either isn't installed or isn't on your `PATH`. Re-install per the [install section](#2-ffmpeg) and reopen the GUI.
+
+### "No valid videos found"
+The processor only keeps videos ≥80 seconds long (you need that extra 20 seconds so it can pick a random start point between 10 and `duration - 70` seconds). Drop shorter clips into the source folder or use longer source material. The processor scans everything in the folder *except* `.log`, `.py`, `.txt`, and `.json` files, so unusual video formats are fine as long as FFmpeg can decode them.
+
+### Processing is slow
+- Run it from a local SSD, not a network drive.
+- Close other heavy apps while it runs (FFmpeg will happily eat all your cores).
+- Use the **Low Quality** preset if you don't need broadcast quality.
+- The processor needs roughly 5–10 GB of temp space; if your scratch disk is small or full, the bottleneck is I/O, not CPU.
+
+### "Permission denied"
+- **Windows:** run the terminal/GUI as administrator.
+- **macOS/Linux:** check folder permissions with `ls -la`; `chmod` as needed.
+
+### Output has no sound
+Verify your source videos actually have audio (some YouTube-ripped clips don't). If they do, leave Audio Normalization enabled — the loudnorm filter is well-tested and shouldn't drop audio on its own.
+
+### Application won't start
+- Check `python --version` is 3.8+.
+- Check Tkinter is available: `python -m tkinter` should open a small test window.
+- If launching the GUI gives no visible error, try `python powerhour/run_gui_debug.py` instead — it prints step-by-step startup info.
+
+## FAQ
+
+**How long does processing take?** Usually 10–30 minutes for 60 videos. Depends on your CPU, quality preset, and source resolutions.
+
+**Can I use videos shorter than 60 seconds?** No. The processor needs at least 80 seconds of source so it can pick a random 60-second window with a little headroom.
+
+**What video formats are supported?** Anything FFmpeg can decode — MP4, MKV, MOV, AVI, WMV, FLV, WebM, and many more.
+
+**Can I pause and resume processing?** Not currently. Cancel stops it cleanly; otherwise it runs to completion.
+
+**How does audio normalization work?** The processor runs FFmpeg's `loudnorm` filter at I=-23 LUFS (broadcast standard), measures each clip's loudness once, then re-encodes the clip with the measured values applied for proper two-pass normalization.
+
+**Can I change the output resolution?** Not from the GUI. It's hardcoded to 1280×720. You'd need to modify the `scale=1280:720` filter in `powerhour/powerhour_processor.py`.
+
+**Is GPU acceleration supported?** Not by default. Expert users can modify the FFmpeg command in the processor to use hardware encoders (`h264_nvenc`, `h264_videotoolbox`, etc.) for their platform.
+
+**Why do my outputs have black bars?** The processor scales everything to 1280×720. Anything that isn't 16:9 gets letterboxed.
+
+**Why do some videos fail to process?** Usually codec or container issues. Check the output log for the specific FFmpeg error.
+
+**What about more than 60 videos?** The processor randomly picks 60 from whatever's in your folder.
+
+## License
+
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See the [LICENSE](../LICENSE) file at the project root for the full text.
