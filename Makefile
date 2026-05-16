@@ -6,7 +6,7 @@ PYTHON := python3
 PIP := $(PYTHON) -m pip
 PYTEST := $(PYTHON) -m pytest
 PYINSTALLER := $(PYTHON) -m PyInstaller
-VERSION := 1.0.0
+VERSION := $(shell grep -E '^__version__' powerhour/__init__.py | sed -E 's/.*["\x27]([^"\x27]+)["\x27].*/\1/')
 PROJECT := PowerHourGenerator
 
 # Platform detection

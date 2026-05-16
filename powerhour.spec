@@ -13,6 +13,7 @@ Build commands:
 
 import sys
 import os
+import re
 from pathlib import Path
 
 # Determine if we're building for Windows
@@ -22,6 +23,13 @@ IS_LINUX = sys.platform.startswith('linux')
 
 # Get the current directory
 SPEC_DIR = Path(os.path.dirname(os.path.abspath(SPEC)))
+
+# Read canonical version from powerhour/__init__.py (parsed, not imported).
+_init_text = (SPEC_DIR / 'powerhour' / '__init__.py').read_text(encoding='utf-8')
+_version_match = re.search(r"""^__version__\s*=\s*['"]([^'"]+)['"]""", _init_text, re.MULTILINE)
+if not _version_match:
+    raise RuntimeError("Could not find __version__ in powerhour/__init__.py")
+VERSION = _version_match.group(1)
 
 # Analysis configuration
 a = Analysis(
@@ -36,16 +44,14 @@ a = Analysis(
     
     # Data files to include
     datas=[
-        # Include documentation
+        # Include documentation (kept in sync with docs/ surface; see docs/DEVELOPING.md)
         ('README.md', '.'),
-        ('docs/README_GUI.md', 'docs'),
         ('docs/USER_GUIDE.md', 'docs'),
+        ('docs/DEVELOPING.md', 'docs'),
         ('docs/CHANGELOG.md', 'docs'),
+        ('docs/RELEASE.md', 'docs'),
         ('LICENSE', '.'),
         ('assets/logo.png', 'assets'),
-        
-        # Include any config templates or sample files
-        # ('data/config_template.json', 'data'),
     ],
     
     # Hidden imports that PyInstaller might miss
@@ -169,8 +175,8 @@ if IS_MACOS:
         info_plist={
             'CFBundleName': 'PowerHour Generator',
             'CFBundleDisplayName': 'PowerHour Generator',
-            'CFBundleShortVersionString': '1.0.0',
-            'CFBundleVersion': '1.0.0',
+            'CFBundleShortVersionString': VERSION,
+            'CFBundleVersion': VERSION,
             'CFBundleExecutable': 'PowerHourGenerator',
             'CFBundleIconFile': 'powerhour-icon.icns',
             'NSHighResolutionCapable': 'True',

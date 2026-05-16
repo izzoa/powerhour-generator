@@ -376,7 +376,8 @@ jobs:
             
             ## 📚 Documentation
             - [User Guide](https://github.com/izzoa/powerhour-generator/blob/main/docs/USER_GUIDE.md)
-            - [Quick Start](https://github.com/izzoa/powerhour-generator/blob/main/docs/README_GUI.md)
+            - [Developer Guide](https://github.com/izzoa/powerhour-generator/blob/main/docs/DEVELOPING.md)
+            - [Changelog](https://github.com/izzoa/powerhour-generator/blob/main/docs/CHANGELOG.md)
             
             ## 🐛 Reporting Issues
             Please report any issues at: https://github.com/izzoa/powerhour-generator/issues

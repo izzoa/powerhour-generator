@@ -17,6 +17,7 @@ Options:
 
 import sys
 import os
+import re
 import shutil
 import subprocess
 import platform
@@ -25,16 +26,31 @@ import argparse
 import zipfile
 import tarfile
 
+
+def _read_version(root_dir):
+    """Parse __version__ from powerhour/__init__.py (canonical version source)."""
+    init_file = root_dir / 'powerhour' / '__init__.py'
+    match = re.search(
+        r"""^__version__\s*=\s*['"]([^'"]+)['"]""",
+        init_file.read_text(encoding='utf-8'),
+        re.MULTILINE,
+    )
+    if not match:
+        raise RuntimeError(f"Could not find __version__ in {init_file}")
+    return match.group(1)
+
+
 class Builder:
     """Handles the build process for PowerHour Generator"""
-    
+
     def __init__(self):
-        self.root_dir = Path(__file__).parent.absolute()
+        # scripts/build.py lives under scripts/, so root is its parent's parent.
+        self.root_dir = Path(__file__).parent.parent.absolute()
         self.dist_dir = self.root_dir / 'dist'
         self.build_dir = self.root_dir / 'build'
         self.release_dir = self.root_dir / 'releases'
         self.platform = platform.system().lower()
-        self.version = '1.0.0'
+        self.version = _read_version(self.root_dir)
         
     def clean(self):
         """Clean build artifacts"""
@@ -136,20 +152,20 @@ class Builder:
         if exe_source.exists():
             shutil.copytree(exe_source, package_dir / 'PowerHourGenerator')
         
-        # Copy documentation
-        docs = [
-            'README.md',
-            'README_GUI.md',
-            'USER_GUIDE.md',
-            'CHANGELOG.md',
-            'LICENSE',
-        ]
-        
+        # Copy documentation. README and LICENSE live at the repo root; the rest live in docs/.
+        root_docs = ['README.md', 'LICENSE']
+        sub_docs = ['USER_GUIDE.md', 'DEVELOPING.md', 'CHANGELOG.md', 'RELEASE.md']
+
         docs_dir = package_dir / 'docs'
         docs_dir.mkdir()
-        
-        for doc in docs:
+
+        for doc in root_docs:
             doc_path = self.root_dir / doc
+            if doc_path.exists():
+                shutil.copy(doc_path, docs_dir)
+
+        for doc in sub_docs:
+            doc_path = self.root_dir / 'docs' / doc
             if doc_path.exists():
                 shutil.copy(doc_path, docs_dir)
         

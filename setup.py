@@ -8,6 +8,7 @@ and installation via pip or other Python package managers.
 
 from setuptools import setup, find_packages
 from pathlib import Path
+import re
 import sys
 
 # Ensure we're using Python 3.8 or higher
@@ -18,8 +19,13 @@ if sys.version_info < (3, 8):
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text(encoding='utf-8')
 
-# Read version from a dedicated version file or extract from main module
-VERSION = '1.0.0'
+# Read version from the canonical source: powerhour/__init__.py:__version__
+# Parsed (not imported) to avoid pulling Tk into the build environment.
+_init_text = (this_directory / "powerhour" / "__init__.py").read_text(encoding='utf-8')
+_version_match = re.search(r"""^__version__\s*=\s*['"]([^'"]+)['"]""", _init_text, re.MULTILINE)
+if not _version_match:
+    raise RuntimeError("Could not find __version__ in powerhour/__init__.py")
+VERSION = _version_match.group(1)
 
 setup(
     name='powerhour-generator',
@@ -32,7 +38,7 @@ setup(
     url='https://github.com/izzoa/powerhour-generator',
     project_urls={
         'Bug Tracker': 'https://github.com/izzoa/powerhour-generator/issues',
-        'Documentation': 'https://github.com/izzoa/powerhour-generator/wiki',
+        'Documentation': 'https://github.com/izzoa/powerhour-generator/blob/main/docs/USER_GUIDE.md',
         'Source Code': 'https://github.com/izzoa/powerhour-generator',
     },
     license='AGPL-3.0-or-later',
