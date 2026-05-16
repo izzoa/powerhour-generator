@@ -183,3 +183,7 @@ config.json
 !test_videos/common_clip.mp4
 .early.coverage
 .claude/
+
+# OpenSpec workflow artifacts (proposals, designs, specs, archived changes).
+# Local to each contributor; not tracked in the repo.
+openspec/
