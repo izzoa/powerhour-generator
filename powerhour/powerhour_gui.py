@@ -1544,6 +1544,11 @@ class PowerHourGUI(tk.Tk):
                     # Update progress bars
                     current = message.get('current', 0)
                     total = message.get('total', 60)
+                    # Track the actual total — Progressbar's `maximum` was
+                    # hardcoded to 60 at construction, but the real total
+                    # depends on how many videos the processor selected
+                    # (e.g., a small folder yields fewer than 60).
+                    self.overall_progress_bar.config(maximum=max(total, 1))
                     self.overall_progress_var.set(current)
                     self.overall_progress_label.config(text=f"{current}/{total} videos")
                     self.videos_processed = current
