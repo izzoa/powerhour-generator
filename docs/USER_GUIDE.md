@@ -185,6 +185,30 @@ Example URL formats:
 - `https://www.youtube.com/playlist?list=PLxxxxxx`
 - `https://www.youtube.com/watch?v=xxxx&list=PLxxxx`
 
+#### Keeping yt-dlp Up to Date
+
+YouTube changes extractors frequently, so an outdated yt-dlp is the most
+common cause of download failures. The bottom status bar shows your installed
+yt-dlp version next to a freshness indicator (**• Up to date** or
+**• Update available: X.Y.Z**). Click the action button to upgrade:
+
+- **Update yt-dlp** — runs the upgrade command appropriate to your install
+  method (Homebrew, pipx, pip in a venv, Chocolatey, or a standalone binary).
+  Output streams into the Output Log panel.
+- **Check for Update** — re-queries PyPI when you're already current, in case
+  a newer release has appeared since launch.
+- **How to install** — shown when yt-dlp is not installed; opens the project
+  README's installation section in your browser.
+
+If the GUI detects an install method it cannot safely upgrade (apt/dnf, conda,
+asdf/pyenv/mise shims, nix, snap, flatpak, scoop, winget, npm, etc.), the
+Output Log will display a copy-paste command appropriate to that manager
+instead of running an automatic upgrade.
+
+Note for nightly-channel users: PyPI is queried for the latest *stable*
+release. If your installed nightly is newer than PyPI's stable version, the
+status bar will read "Up to date" — the GUI will not prompt you to downgrade.
+
 ---
 
 ## Advanced Features

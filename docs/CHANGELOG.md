@@ -5,6 +5,11 @@ All notable changes to the PowerHour Video Generator GUI will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- yt-dlp version display and in-app update button to the existing GUI status bar. On launch, the GUI queries PyPI in a background thread for the latest stable release and indicates whether the local install is current. Supports auto-upgrade for Homebrew, pipx, pip (verified venv), Chocolatey, and standalone installs; shows a copy-paste manual command for unsupported managers (apt/dnf, conda, pyenv/asdf/mise shims, nix, snap, flatpak, scoop, winget, npm).
+
 ## [1.0.0] - 2024-12-XX
 
 ### 🎉 Initial GUI Release

@@ -181,3 +181,5 @@ config.json
 *.mov
 !test_videos/test_video.mp4
 !test_videos/common_clip.mp4
+.early.coverage
+.claude/

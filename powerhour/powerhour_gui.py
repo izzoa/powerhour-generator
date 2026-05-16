@@ -45,19 +45,22 @@ import platform
 import traceback
 import tempfile
 import atexit
+import webbrowser
 from datetime import datetime
 from typing import Optional, Dict, Any
 
 # Import the processor for video generation
 try:
     from .powerhour_processor import ProcessorThread
+    from .ytdlp_updater import YtDlpUpdaterThread, YTDLP_INSTALL_DOCS_URL
 except ImportError:
     try:
         # Fallback for when running as a script
         from powerhour_processor import ProcessorThread
+        from ytdlp_updater import YtDlpUpdaterThread, YTDLP_INSTALL_DOCS_URL
     except ImportError as e:
-        print(f"Error: Could not import ProcessorThread: {e}")
-        print("Please ensure powerhour_processor.py is in the same directory.")
+        print(f"Error: Could not import ProcessorThread/YtDlpUpdaterThread: {e}")
+        print("Please ensure powerhour_processor.py and ytdlp_updater.py are present.")
         sys.exit(1)
 
 # Try to import psutil for resource monitoring (optional)
@@ -169,7 +172,12 @@ class PowerHourGUI(tk.Tk):
         # Initialize queue for thread communication
         self.message_queue = queue.Queue()
         self.processing_thread = None
-        
+
+        # yt-dlp updater state — must be set before build_status_bar/process_queue.
+        self._ytdlp_status: Optional[Dict[str, Any]] = None
+        self._ytdlp_update_in_progress = False
+        self._processing_active = False
+
         # Build GUI sections
         self.build_menu_bar()
         self.build_input_section()
@@ -177,13 +185,19 @@ class PowerHourGUI(tk.Tk):
         self.build_progress_section()
         self.build_log_section()
         self.build_status_bar()
-        
+
         # Bind window close event to save config
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
+
         # Start queue processing
         self.process_queue()
-        
+
+        # Launch the yt-dlp version check off the Tk main thread. No blocking
+        # network or subprocess call happens on the main loop before mainloop()
+        # enters its first iteration — process_queue has already been scheduled
+        # above, so any messages this thread enqueues will be consumed.
+        YtDlpUpdaterThread(self.message_queue, mode='check_only').start()
+
         # Log startup
         self.log_to_file("info", "Application started")
     
@@ -482,11 +496,33 @@ class PowerHourGUI(tk.Tk):
         # Right side - resource usage
         self.resource_label = ttk.Label(self.status_bar, text="", font=("Arial", 9))
         self.resource_label.pack(side="right", padx=5)
-        
+
+        # yt-dlp version / freshness / update action (packed right-anchored;
+        # appears to the LEFT of resource_label because Tk packs right-anchored
+        # items right-to-left in source order).
+        ttk.Separator(self.status_bar, orient="vertical").pack(
+            side="right", fill="y", padx=5
+        )
+        self.ytdlp_action_button = ttk.Button(
+            self.status_bar,
+            text="Check for Update",
+            state="disabled",
+            command=self.on_update_ytdlp_clicked,
+        )
+        self.ytdlp_action_button.pack(side="right", padx=5)
+        self.ytdlp_freshness_label = ttk.Label(
+            self.status_bar, text="", font=("Arial", 9)
+        )
+        self.ytdlp_freshness_label.pack(side="right", padx=2)
+        self.ytdlp_version_label = ttk.Label(
+            self.status_bar, text="yt-dlp: …", font=("Arial", 9)
+        )
+        self.ytdlp_version_label.pack(side="right", padx=2)
+
         # Center - current operation
         self.operation_label = ttk.Label(self.status_bar, text="", font=("Arial", 9, "italic"))
         self.operation_label.pack(side="left", padx=20)
-        
+
         # Start resource monitoring
         self.update_resource_usage()
     
@@ -1227,12 +1263,16 @@ class PowerHourGUI(tk.Tk):
             self.status_var.set("Processing...")
             self.start_button.config(state="disabled")
             self.cancel_button.config(state="normal")
-            
+
             # Disable input fields during processing
             self.video_source_combo.config(state="disabled")
             self.common_clip_combo.config(state="disabled")
             self.fade_duration_spinbox.config(state="disabled")
             self.output_file_combo.config(state="disabled")
+
+            # Disable the yt-dlp action button for the duration of processing.
+            self._processing_active = True
+            self.ytdlp_action_button.config(state="disabled")
             
             # Reset progress bars
             self.current_progress_var.set(0)
@@ -1347,13 +1387,13 @@ class PowerHourGUI(tk.Tk):
     def reset_ui_state(self) -> None:
         """
         Reset UI controls to their initial enabled/disabled state.
-        
+
         Re-enables input fields and Start button, disables Cancel button.
         Used after processing completes or is cancelled.
-        
+
         Returns:
             None
-            
+
         Complexity: O(1)
         Flow: Called after processing completes, cancels, or errors
         """
@@ -1363,6 +1403,116 @@ class PowerHourGUI(tk.Tk):
         self.common_clip_combo.config(state="normal")
         self.fade_duration_spinbox.config(state="normal")
         self.output_file_combo.config(state="normal")
+        self._processing_active = False
+        # Re-enable the yt-dlp action button only when no updater is in flight.
+        # If an updater is still running, _handle_ytdlp_update_complete will
+        # re-enable it when the updater finishes (also gated on _processing_active).
+        if not self._ytdlp_update_in_progress:
+            self._set_ytdlp_button_enabled_for_status()
+
+    def _set_ytdlp_button_enabled_for_status(self) -> None:
+        """Enable the yt-dlp action button based on the most recent status."""
+        if self._processing_active or self._ytdlp_update_in_progress:
+            self.ytdlp_action_button.config(state="disabled")
+            return
+        if self._ytdlp_status is None:
+            self.ytdlp_action_button.config(state="disabled")
+            return
+        self.ytdlp_action_button.config(state="normal")
+
+    def _handle_ytdlp_status(self, message: Dict[str, Any]) -> None:
+        """Handle a `ytdlp_status` message from the updater thread."""
+        self._ytdlp_status = message
+        installed = message.get('installed_version')
+        latest = message.get('latest_version')
+        method = message.get('install_method')
+        freshness = message.get('freshness')
+
+        # Version label
+        if method == 'missing':
+            self.ytdlp_version_label.config(text="yt-dlp: not installed")
+        elif installed:
+            self.ytdlp_version_label.config(text=f"yt-dlp: {installed}")
+        else:
+            self.ytdlp_version_label.config(text="yt-dlp: version unknown")
+
+        # Freshness indicator + color
+        if method == 'missing':
+            self.ytdlp_freshness_label.config(
+                text="• Required for URL downloads", foreground="#888888"
+            )
+        elif freshness == 'current':
+            self.ytdlp_freshness_label.config(text="• Up to date", foreground="")
+        elif freshness == 'outdated' and latest:
+            self.ytdlp_freshness_label.config(
+                text=f"• Update available: {latest}", foreground="#cc6600"
+            )
+        else:
+            self.ytdlp_freshness_label.config(text="", foreground="#888888")
+
+        # Action button label
+        if method == 'missing':
+            self.ytdlp_action_button.config(text="How to install")
+        elif freshness == 'outdated':
+            self.ytdlp_action_button.config(text="Update yt-dlp")
+        else:
+            self.ytdlp_action_button.config(text="Check for Update")
+
+        # Enable/disable based on current activity gates
+        self._set_ytdlp_button_enabled_for_status()
+
+    def _handle_ytdlp_update_complete(self, message: Dict[str, Any]) -> None:
+        """Handle a `ytdlp_update_complete` message from the updater thread."""
+        self._ytdlp_update_in_progress = False
+        success = message.get('success', False)
+        new_version = message.get('new_version')
+        latest_version = message.get('latest_version')
+        reverified = message.get('reverified_freshness', 'unknown')
+
+        if success and reverified == 'current':
+            if new_version:
+                self.ytdlp_version_label.config(text=f"yt-dlp: {new_version}")
+            self.ytdlp_freshness_label.config(text="• Up to date", foreground="")
+            self.ytdlp_action_button.config(text="Check for Update")
+            if self._ytdlp_status is not None:
+                self._ytdlp_status['installed_version'] = new_version
+                self._ytdlp_status['freshness'] = 'current'
+            self.log_info(f"yt-dlp updated to {new_version}")
+        elif success and reverified == 'outdated' and latest_version:
+            if new_version:
+                self.ytdlp_version_label.config(text=f"yt-dlp: {new_version}")
+            self.ytdlp_freshness_label.config(
+                text=f"• Update available: {latest_version}", foreground="#cc6600"
+            )
+            self.ytdlp_action_button.config(text="Update yt-dlp")
+            self.log_warning(
+                f"Package manager reported success but installed version "
+                f"({new_version}) is still older than latest ({latest_version}) "
+                "— the package manager's repo may lag the upstream release"
+            )
+        elif success and reverified == 'unknown':
+            self.ytdlp_version_label.config(text="yt-dlp: version unknown")
+            self.ytdlp_freshness_label.config(text="", foreground="#888888")
+            self.log_info("yt-dlp upgrade completed but re-verification was inconclusive")
+        # Non-success cases leave the status-bar state unchanged.
+
+        self._set_ytdlp_button_enabled_for_status()
+
+    def on_update_ytdlp_clicked(self) -> None:
+        """Handle clicks on the yt-dlp status-bar action button."""
+        if self._ytdlp_status is None:
+            self.log_warning("yt-dlp status not yet available; please retry shortly")
+            return
+        method = self._ytdlp_status.get('install_method')
+        if method == 'missing':
+            try:
+                webbrowser.open(YTDLP_INSTALL_DOCS_URL)
+            except Exception as e:
+                self.log_error(f"Could not open install docs: {e}")
+            return
+        self._ytdlp_update_in_progress = True
+        self.ytdlp_action_button.config(state="disabled")
+        YtDlpUpdaterThread(self.message_queue, mode='check_and_upgrade').start()
     
     def process_queue(self) -> None:
         """
@@ -1435,7 +1585,13 @@ class PowerHourGUI(tk.Tk):
                 elif message['type'] == 'complete':
                     # Processing complete
                     self.on_processing_complete()
-                    
+
+                elif message['type'] == 'ytdlp_status':
+                    self._handle_ytdlp_status(message)
+
+                elif message['type'] == 'ytdlp_update_complete':
+                    self._handle_ytdlp_update_complete(message)
+
                 elif message['type'] == 'error':
                     # Show error
                     error_msg = message['message']

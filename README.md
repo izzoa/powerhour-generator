@@ -72,8 +72,29 @@ python powerhour_generator.py /path/to/videos /path/to/transition.mp4 3 output.m
 - **FFmpeg** - Video processing engine
 - **Python 3.8+** - Runtime environment
 - **Tkinter** - GUI framework (included with Python)
-- **yt-dlp** - YouTube download support (optional)
+- **yt-dlp** - YouTube download support (optional, see [yt-dlp](#yt-dlp) below)
 - **psutil** - Resource monitoring (optional)
+
+## yt-dlp
+
+yt-dlp is required when you provide a playlist URL as the video source. The GUI's
+bottom status bar shows the installed yt-dlp version and a **Check for Update** /
+**Update yt-dlp** action. On launch the GUI queries PyPI in a background thread
+to check whether a newer release is available.
+
+Install yt-dlp using whichever method matches your environment:
+
+- **macOS (Homebrew)**: `brew install yt-dlp`
+- **Linux (apt)**: `sudo apt install yt-dlp` *(may lag upstream — consider pipx)*
+- **Windows (Chocolatey)**: `choco install yt-dlp`
+- **Cross-platform (pipx, recommended)**: `pipx install yt-dlp`
+- **Standalone binary**: download from the
+  [yt-dlp releases page](https://github.com/yt-dlp/yt-dlp/releases) and place on PATH
+
+The in-app update button runs the upgrade command appropriate to your install
+method. For unsupported managers (apt, conda, asdf/pyenv/mise shims, snap,
+flatpak, scoop, winget, npm, etc.) the GUI shows a copy-paste command in the
+Output Log rather than guessing.
 
 ## 🔧 Installation
 

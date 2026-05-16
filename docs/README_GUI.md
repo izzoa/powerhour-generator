@@ -217,6 +217,15 @@ When reporting issues, please include:
 ## License
 This project is licensed under the MIT License. See LICENSE file for details.
 
+## Status Bar
+
+The bottom status bar shows contextual hints, the current operation, system
+resource usage, and a yt-dlp section with the installed yt-dlp version and a
+**Check for Update** / **Update yt-dlp** / **How to install** action button.
+On launch, the GUI queries PyPI in a background thread to check whether a
+newer release is available. The action button is disabled while a video
+processing job is active.
+
 ## Credits
 - Developed by Anthony Izzo
 - Built with Python and Tkinter
