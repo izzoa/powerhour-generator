@@ -26,7 +26,6 @@ Dependencies:
     - ffmpeg: External video processing tool
 
 Author: Anthony Izzo
-Version: 1.0.0
 License: AGPL-3.0-or-later
 """
 
@@ -51,9 +50,11 @@ from typing import Optional, Dict, Any
 
 # Import the processor for video generation
 try:
+    from . import __version__ as APP_VERSION
     from .powerhour_processor import ProcessorThread
     from .ytdlp_updater import YtDlpUpdaterThread, YTDLP_INSTALL_DOCS_URL
 except ImportError:
+    APP_VERSION = "(dev)"
     try:
         # Fallback for when running as a script
         from powerhour_processor import ProcessorThread
@@ -463,10 +464,8 @@ class PowerHourGUI(tk.Tk):
         
         help_menu.add_command(label="About PowerHour", command=self.show_about)
         help_menu.add_command(label="User Guide", command=self.show_user_guide)
-        help_menu.add_command(label="Keyboard Shortcuts", command=self.show_shortcuts)
         help_menu.add_separator()
         help_menu.add_command(label="View Error Log", command=self.view_error_log)
-        help_menu.add_command(label="Check for Updates", command=self.check_updates)
     
     def build_status_bar(self) -> None:
         """
@@ -2150,20 +2149,20 @@ class PowerHourGUI(tk.Tk):
         Complexity: O(1)
         Flow: Called from Help menu
         """
-        about_text = """PowerHour Video Generator
-Version 1.0
-        
-Create PowerHour videos with ease!
-        
-A PowerHour is a drinking game where participants
-take a shot of beer every minute for an hour,
-typically accompanied by 60 one-minute video clips.
-        
-This tool automates the creation of these videos
-with transitions and audio normalization.
-        
-© 2024 - Built with Python and FFmpeg"""
-        
+        about_text = f"""PowerHour Video Generator
+Version {APP_VERSION}
+
+Create PowerHour videos with ease.
+
+A PowerHour is a party game where players take a sip
+every minute for an hour, traditionally accompanied
+by a video that changes every 60 seconds. This tool
+builds that video for you with transitions and
+audio normalization.
+
+Built with Python and FFmpeg.
+Licensed under AGPL-3.0-or-later."""
+
         messagebox.showinfo("About PowerHour", about_text)
     
     def show_user_guide(self) -> None:
@@ -2216,34 +2215,6 @@ TIPS:
         text.insert("1.0", guide)
         text.config(state="disabled")
     
-    def show_shortcuts(self) -> None:
-        """
-        Show keyboard shortcuts reference.
-        
-        Displays a dialog listing all available keyboard shortcuts
-        for quick reference.
-        
-        Returns:
-            None
-            
-        Complexity: O(1)
-        Flow: Called from Help menu
-        """
-        shortcuts = """Keyboard Shortcuts:
-        
-Ctrl+O    - Browse for video source
-Ctrl+S    - Save output as
-Ctrl+R    - Start processing
-Ctrl+C    - Cancel processing
-Ctrl+L    - Clear log
-Ctrl+Q    - Quit application
-        
-F1        - Show help
-F5        - Refresh validation
-F11       - Toggle expert mode"""
-        
-        messagebox.showinfo("Keyboard Shortcuts", shortcuts)
-    
     def view_error_log(self) -> None:
         """
         Open error log file in system default text editor.
@@ -2272,23 +2243,6 @@ F11       - Toggle expert mode"""
                 subprocess.call(["xdg-open", self.error_log_file])
         else:
             messagebox.showinfo("No Error Log", "No error log file found")
-    
-    def check_updates(self) -> None:
-        """
-        Check for application updates.
-        
-        Currently shows static version information. In production,
-        would check remote server for updates.
-        
-        Returns:
-            None
-            
-        Complexity: O(1)
-        Flow: Called from Help menu
-        """
-        # In a real app, this would check a server
-        messagebox.showinfo("Check for Updates",
-                          "You are running the latest version (1.0)")
     
     def update_resource_usage(self) -> None:
         """
