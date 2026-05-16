@@ -586,7 +586,7 @@ Contributors are recognized in:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same license as the project (MIT License).
+By contributing, you agree that your contributions will be licensed under the same license as the project (GNU Affero General Public License v3.0 or later, AGPL-3.0-or-later). Contributions accepted before the relicensing remain available under their original MIT terms in the git history; new contributions are AGPL-3.0-or-later.
 
 ---
 

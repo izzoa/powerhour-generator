@@ -27,7 +27,7 @@ Dependencies:
 
 Author: Anthony Izzo
 Version: 1.0.0
-License: MIT
+License: AGPL-3.0-or-later
 """
 
 import tkinter as tk

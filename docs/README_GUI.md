@@ -215,7 +215,7 @@ When reporting issues, please include:
 5. Steps to reproduce the issue
 
 ## License
-This project is licensed under the MIT License. See LICENSE file for details.
+This project is licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See the LICENSE file for the full text.
 
 ## Status Bar
 

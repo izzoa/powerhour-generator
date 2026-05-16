@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-Required-green.svg)](https://ffmpeg.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![GUI](https://img.shields.io/badge/GUI-Available-success.svg)](README_GUI.md)
 [![CLI](https://img.shields.io/badge/CLI-Available-success.svg)](#command-line-usage)
 
@@ -303,7 +303,9 @@ See **[CHANGELOG.md](docs/CHANGELOG.md#roadmap)** for planned features:
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU Affero General Public License v3.0 or later** (AGPL-3.0-or-later) — see the [LICENSE](LICENSE) file for the full text.
+
+The AGPL is a strong-copyleft license. In addition to the standard GPLv3 obligations (source disclosure on distribution, same-license derivatives), the AGPL also requires source disclosure when the software is used over a network. If you fork, modify, or run a modified version of this project — including as a hosted service — you must make the corresponding source code available to your users.
 
 ## 🙏 Acknowledgments
 

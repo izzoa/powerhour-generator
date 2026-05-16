@@ -49,7 +49,7 @@ powerhour-generator/
 ├── test_output/                  # Test output directory (gitignored)
 │
 ├── README.md                     # Main project README
-├── LICENSE                       # MIT License
+├── LICENSE                       # GNU Affero General Public License v3.0+
 ├── setup.py                      # Python package configuration
 ├── requirements.txt              # Python dependencies
 ├── requirements-dev.txt          # Development dependencies

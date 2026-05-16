@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING (legal):** Relicensed from MIT to GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). The AGPL is a strong-copyleft license: in addition to the GPLv3 obligations (source disclosure on distribution, same-license derivatives), it requires source disclosure when the software is used over a network. Forks, modified versions, and hosted deployments must make corresponding source available. Contributions accepted before this commit remain available under MIT in the git history; all new code and contributions are AGPL-3.0-or-later. See [LICENSE](../LICENSE) for the full text.
+
 ### Added
 - yt-dlp version display and in-app update button to the existing GUI status bar. On launch, the GUI queries PyPI in a background thread for the latest stable release and indicates whether the local install is current. Supports auto-upgrade for Homebrew, pipx, pip (verified venv), Chocolatey, and standalone installs; shows a copy-paste manual command for unsupported managers (apt/dnf, conda, pyenv/asdf/mise shims, nix, snap, flatpak, scoop, winget, npm).
 
